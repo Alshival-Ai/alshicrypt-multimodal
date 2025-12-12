@@ -1,6 +1,6 @@
 # AlshiCrypt
 
-AlshiCrypt is an experiment in **multi-modal, machine-learning-based encryption**. The idea is to treat visual and audio media as two halves of a single tensor and train a pair of neural networks:
+AlshiCrypt is an experiment in **multi-modal, machine-learning-based encryption**. The idea is to treat visual and audio media as two halves of a single tensor and train a pair of neural networks, but only after picking a strictly invertible transform. We first sample a reversible (bijective) permutation across both modalities, then use that transform to synthesize training data so the learned encryptor/decryptor always has a perfect inverse to mimic.
 
 - an **encryptor** that learns to transform aligned image/audio tensors into apparently unrelated tensors, and
 - a **decryptor** that learns to undo the same transform and reconstruct the original signals.
@@ -9,9 +9,9 @@ Because both networks are trained on the exact invertible transform that produce
 
 ## Project workflow
 
-1. **Sample a random transform** – `alshicrypt.random_media_transform` builds invertible permutations and channel shuffles for both modalities.
+1. **Sample a random transform** – `alshicrypt.random_media_transform` builds invertible permutations and channel shuffles for both modalities, guaranteeing that the same transform object can be inverted exactly.
 2. **Create paired training data** – `train.py` or `alshicrypt.generate` load files from `samples/images` and `samples/audio/wav`, apply the transform, and serialize `(original, encrypted)` tensor pairs.
-3. **Train encryptor/decryptor models** – `alshicrypt.generate` builds two autoencoders (see `src/alshicrypt/model.py`) and optimizes them until they reach near-perfect reconstruction accuracy on the held-out data.
+3. **Train encryptor/decryptor models** – `alshicrypt.generate` builds two autoencoders (see `src/alshicrypt/model.py`) and optimizes them until they reach near-perfect reconstruction accuracy on the held-out data, leveraging the fact that every training example shares the same invertible transform.
 4. **Evaluate / demo** – `sample.py` demonstrates the tensor pipeline, while the generation script prints per-epoch reconstruction accuracy so you can judge when the model has fully learned the mapping.
 
 ## Repository guide
