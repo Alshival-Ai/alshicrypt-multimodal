@@ -1,3 +1,17 @@
+samples/audio/*
+samples/images/airplane
+samples/images/automobile
+
+samples/images/cat 
+samples/images/deer
+samples/images/dog
+samples/images/frog
+samples/images/horse
+samples/images/ship
+samples/images/truck
+
+dataset/train.pt
+cifar-10-batches-py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
