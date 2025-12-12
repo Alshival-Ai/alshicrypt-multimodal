@@ -1,0 +1,6 @@
+torch==2.9.1+cpu
+torchvision==0.24.1+cpu
+pillow==12.0.0
+numpy==2.3.5
+torchaudio==2.9.1+cpu
+soundfile==0.13.1
