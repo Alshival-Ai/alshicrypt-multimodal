@@ -20,7 +20,7 @@ CIFAR10_STD: Sequence[float] = (0.2470, 0.2435, 0.2616)
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp"}
 AUDIO_EXTENSIONS = {".wav", ".wave"}
 DEFAULT_AUDIO_SAMPLE_RATE = 16000
-DEFAULT_AUDIO_NUM_SAMPLES = 16000
+DEFAULT_AUDIO_NUM_SAMPLES = 4096
 
 
 @dataclass

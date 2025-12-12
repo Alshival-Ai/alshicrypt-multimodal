@@ -5,7 +5,7 @@ import argparse
 import random
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Sequence, Tuple, Union
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -55,10 +55,17 @@ def _split_files(directory: Path, pattern: str, train_count: int, test_count: in
     return files[:train_count], files[train_count:]
 
 
-def _build_pairs(paths: Iterable[Path], transform, *, inverse: bool = False) -> List[Tuple[MediaTensor, MediaTensor]]:
+def _build_pairs(
+    paths: Iterable[Path],
+    transform,
+    *,
+    tensor_kwargs: dict | None = None,
+    inverse: bool = False,
+) -> List[Tuple[MediaTensor, MediaTensor]]:
     pairs = []
+    tensor_kwargs = tensor_kwargs or {}
     for path in paths:
-        media = tensorfy_media(path)
+        media = tensorfy_media(path, **tensor_kwargs)
         encrypted = transform.apply(media)
         if inverse:
             pairs.append((encrypted, media))
@@ -67,8 +74,18 @@ def _build_pairs(paths: Iterable[Path], transform, *, inverse: bool = False) -> 
     return pairs
 
 
+def _resolve_device(device: Union[str, torch.device, None] = None) -> torch.device:
+    if device is None:
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    resolved = torch.device(device)
+    if resolved.type == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA device requested but no GPU is available.")
+    return resolved
+
+
 def _batch_to_device(batch, device: torch.device):
-    return {k: v.to(device) for k, v in batch.items()}
+    non_blocking = device.type == "cuda"
+    return {k: v.to(device, non_blocking=non_blocking) for k, v in batch.items()}
 
 
 def _train_model(
@@ -81,11 +98,16 @@ def _train_model(
     max_epochs: int = 200,
     tol: float = 1e-3,
     name: str = "model",
+    device: torch.device,
 ) -> Tuple[int, float]:
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        pin_memory=device.type == "cuda",
+    )
     for epoch in range(1, max_epochs + 1):
         model.train()
         for batch in loader:
@@ -116,7 +138,7 @@ def _train_model(
 
 def evaluate_accuracy(model, dataset: MediaPairDataset, tol: float = 1e-3) -> float:
     device = next(model.parameters()).device
-    loader = DataLoader(dataset, batch_size=1)
+    loader = DataLoader(dataset, batch_size=1, pin_memory=device.type == "cuda")
     correct = 0
     model.eval()
     with torch.no_grad():
@@ -148,8 +170,8 @@ class GenerationResult:
 
 def generate(
     *,
-    image_dir: Path,
-    audio_dir: Path,
+    image_dir: Path | str | None = Path("samples/images"),
+    audio_dir: Path | str | None = Path("samples/audio/wav"),
     num_train_images: int = 200,
     num_train_audio: int = 200,
     num_test_images: int = 10,
@@ -159,22 +181,43 @@ def generate(
     max_epochs: int = 200,
     tol: float = 1e-3,
     seed: int = 0,
+    device: Union[str, torch.device, None] = None,
+    audio_num_samples: int = DEFAULT_AUDIO_NUM_SAMPLES,
+    image_latent_dim: int = 2048,
+    audio_latent_dim: int = 2048,
+    model_layers: int = 4,
+    residual: bool = True,
+    dropout: float = 0.02,
+    expansion: int = 2,
 ) -> GenerationResult:
+    image_dir = Path(image_dir or "samples/images")
+    audio_dir = Path(audio_dir or "samples/audio/wav")
     random.seed(seed)
     torch.manual_seed(seed)
+    device = _resolve_device(device)
+    tensor_kwargs = {"audio_num_samples": audio_num_samples}
 
     image_train, image_test = _split_files(image_dir, "*.png", num_train_images, num_test_images)
     audio_train, audio_test = _split_files(audio_dir, "*.wav", num_train_audio, num_test_audio)
 
-    transform = random_media_transform()
+    transform = random_media_transform(audio_shape=(1, audio_num_samples))
 
-    train_pairs_forward = _build_pairs(image_train + audio_train, transform, inverse=False)
-    test_pairs_forward = _build_pairs(image_test + audio_test, transform, inverse=False)
-    train_pairs_inverse = _build_pairs(image_train + audio_train, transform, inverse=True)
-    test_pairs_inverse = _build_pairs(image_test + audio_test, transform, inverse=True)
+    train_pairs_forward = _build_pairs(image_train + audio_train, transform, tensor_kwargs=tensor_kwargs, inverse=False)
+    test_pairs_forward = _build_pairs(image_test + audio_test, transform, tensor_kwargs=tensor_kwargs, inverse=False)
+    train_pairs_inverse = _build_pairs(image_train + audio_train, transform, tensor_kwargs=tensor_kwargs, inverse=True)
+    test_pairs_inverse = _build_pairs(image_test + audio_test, transform, tensor_kwargs=tensor_kwargs, inverse=True)
 
-    encryptor = build_model(ModelConfig(audio_num_samples=DEFAULT_AUDIO_NUM_SAMPLES))
-    decryptor = build_model(ModelConfig(audio_num_samples=DEFAULT_AUDIO_NUM_SAMPLES))
+    model_config = ModelConfig(
+        audio_num_samples=audio_num_samples,
+        image_latent_dim=image_latent_dim,
+        audio_latent_dim=audio_latent_dim,
+        num_layers=model_layers,
+        residual=residual,
+        dropout=dropout,
+        expansion=expansion,
+    )
+    encryptor = build_model(model_config)
+    decryptor = build_model(model_config)
 
     encrypt_stats = _train_model(
         encryptor,
@@ -185,6 +228,7 @@ def generate(
         max_epochs=max_epochs,
         tol=tol,
         name="encryptor",
+        device=device,
     )
     decrypt_stats = _train_model(
         decryptor,
@@ -195,6 +239,7 @@ def generate(
         max_epochs=max_epochs,
         tol=tol,
         name="decryptor",
+        device=device,
     )
 
     return GenerationResult(
@@ -219,6 +264,53 @@ def main() -> None:
     parser.add_argument("--max-epochs", type=int, default=200)
     parser.add_argument("--tol", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--audio-num-samples",
+        type=int,
+        default=DEFAULT_AUDIO_NUM_SAMPLES,
+        help="Pad/crop audio waveforms to this many samples before training.",
+    )
+    parser.add_argument(
+        "--image-latent-dim",
+        type=int,
+        default=2048,
+        help="Hidden width for the image MLP (must be >= flattened image dim).",
+    )
+    parser.add_argument(
+        "--audio-latent-dim",
+        type=int,
+        default=2048,
+        help="Hidden width for the audio MLP (must be >= padded audio dim).",
+    )
+    parser.add_argument(
+        "--model-layers",
+        type=int,
+        default=4,
+        help="Number of linear layers per modality network.",
+    )
+    parser.add_argument(
+        "--no-residual",
+        action="store_true",
+        help="Disable residual skip connections inside the modality MLPs.",
+    )
+    parser.add_argument(
+        "--dropout",
+        type=float,
+        default=0.02,
+        help="Dropout probability applied inside the modality residual blocks.",
+    )
+    parser.add_argument(
+        "--expansion",
+        type=int,
+        default=2,
+        help="Hidden-width multiplier inside each modality block (>=1).",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        help="Torch device to train on (e.g. 'cuda', 'cuda:0', or 'cpu'). Defaults to GPU when available.",
+    )
     args = parser.parse_args()
 
     result = generate(
@@ -233,6 +325,14 @@ def main() -> None:
         max_epochs=args.max_epochs,
         tol=args.tol,
         seed=args.seed,
+        audio_num_samples=args.audio_num_samples,
+        image_latent_dim=args.image_latent_dim,
+        audio_latent_dim=args.audio_latent_dim,
+        model_layers=args.model_layers,
+        residual=not args.no_residual,
+        dropout=args.dropout,
+        expansion=args.expansion,
+        device=args.device,
     )
     print(
         f"Encryptor epochs={result.encrypt_stats[0]}, accuracy={result.encrypt_stats[1]:.3f}; "
