@@ -1,0 +1,28 @@
+{
+  "num_pairs": 809,
+  "image_size": 128,
+  "beta_start": 0.0005,
+  "beta_end": 0.1,
+  "num_steps": 1000,
+  "final_alpha": 5.0706686959151865e-12,
+  "final_alpha_sq": 2.5711681023734218e-23,
+  "encoded_saturation_rate": 0.6571527777777778,
+  "rgb_correlation": -0.0005892668013579063,
+  "alpha_channel_mae_raw": 0.0,
+  "model_parameters": 4335508,
+  "encoder_mae_all": 0.037858201414162504,
+  "decoder_mae_all": 0.0363858540361685,
+  "encoder_mae_rgb": 0.047315164510242036,
+  "decoder_mae_rgb": 0.044717581222024926,
+  "encoder_psnr_rgb": 18.474539636910034,
+  "decoder_psnr_rgb": 19.860904047225457,
+  "baseline_mae_all": 0.049639963985815626,
+  "baseline_mae_rgb": 0.0661866183530464,
+  "baseline_psnr_rgb": 14.325262149743924,
+  "example_names": [
+    "bulbasaur",
+    "charizard",
+    "pikachu",
+    "mewtwo"
+  ]
+}
