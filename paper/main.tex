@@ -99,6 +99,40 @@ The same viewpoint is not limited to images. Once a medium is represented as a f
 
 This paper studies one stochastic route toward that broader objective. In the current public prototype, all tensors are normalized to $[0,1]$ during processing and learning. The implemented endpoint map is diffusion-like and analytically tractable before clipping and quantization, but the stored PNG pipeline is not exactly invertible. The endomorphism framing is therefore best understood here as the conceptual target for the research program, rather than as a property already achieved by the released implementation.
 
+\subsection{Tensor algebra as the broader category-theoretic framing}
+The image-as-function viewpoint is useful because it exposes the image case cleanly, but the broader research program is better expressed one level up in tensor algebra. In that broader view, image and audio examples are best understood as concrete cases that help us study and understand the framework, not as the boundary of the framework itself. Instead of privileging coordinates first, we can regard a modality sample as a tensor
+\begin{equation}
+x \in V,
+\end{equation}
+where $V$ is a modality-specific tensor space. For the current repository, $V$ is the space of normalized RGBA image tensors; in future instances, $V$ could instead be an audio waveform space, a spectrogram space, a token-embedding tensor space for text, or another tensorized data domain. The point of the formulation is to generalize across modalities, with image and audio serving as especially intuitive cases for building understanding.
+
+In that formulation, the encryption algorithm is modeled as a tensor morphism
+\begin{equation}
+T : V \to V.
+\end{equation}
+The learned forward and reverse networks are then interpreted as learned tensor maps
+\begin{equation}
+E : V \to V,
+\qquad
+D : V \to V,
+\end{equation}
+with the intended relationships
+\begin{equation}
+E(x) \approx T(x),
+\qquad
+D(E(x)) \approx x.
+\end{equation}
+This is the category-theoretic version of the endomorphism viewpoint for the encryption algorithm: the same abstract pattern can be instantiated across multiple modalities as long as the data admit a tensor representation.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.82\linewidth]{../category_theory.pdf}
+    \caption{Tensor-algebra view of the encryption algorithm. A modality sample is treated as a tensor $x \in V$, the intended encryption transform is a tensor morphism $T : V \to V$, and the learned Encrypter $E$ and Decrypter $D$ are trained to approximate the forward and reverse tensor maps. The current repository instantiates this picture for image tensors; image and audio cases are especially useful for intuition, but the abstraction is meant to generalize to text and other tensor-representable modalities as well.}
+    \label{fig:tensor-algebra-view}
+\end{figure}
+
+This tensor-space abstraction clarifies why the current image results matter beyond images themselves. The immediate contribution of the repository is an image-tensor instantiation, but the larger idea is a modality-agnostic encryption/decryption program built from endomorphisms on tensor spaces. In that sense, image and audio should be read as understanding-generating examples of the formalism, whereas the research target is a transferable framework that can be adapted to many kinds of modality.
+
 \subsection{Why stochastic corruption is attractive}
 Let $x_0 \in [0,1]^{H \times W \times 4}$ denote a normalized RGBA image. A deterministic tensor morphism seeks a map
 \begin{equation}
@@ -303,6 +337,8 @@ That choice is appropriate for reproducible training pairs, but it is not a secu
 
 \subsection{Why the stochastic choice was still the right research move}
 Despite those limitations, the stochastic choice was justified. It gave us an analyzable corruption operator, a well-conditioned training target, and a direct way to study the gap between \emph{learned reconstruction under noise} and \emph{cryptographic reversibility}. Deterministic non-linear tensor morphisms did not provide that level of control or transparency in our exploratory work.
+
+The tensor-algebra framing in Figure~\ref{fig:tensor-algebra-view} also helps explain why this remains a useful research direction despite the present limitations. Even though the current public implementation is only an image-tensor prototype and not yet an invertible cryptosystem, it already serves as a concrete testbed for learned tensor morphisms, learned inverse maps, and modality-general principles that can later be carried into audio, text, and other data domains.
 
 \section{Future Work}
 Several directions follow naturally from the present findings:
