@@ -1,0 +1,46 @@
+Category-Theoretic Diagram for the Tensor-Algebra Viewpoint
+===========================================================
+
+Objects
+-------
+V = tensor space for a modality
+x in V = data tensor
+T : V -> V = tensor morphism / endomorphism
+E : V -> V = Encrypter
+D : V -> V = Decrypter
+
+Core tensor picture
+-------------------
+
+              T
+    x -----------------> T(x)
+    |                     ^
+    | E                   |
+    v                     |
+   E(x) ------------------
+          approximation
+
+Learned reconstruction picture
+------------------------------
+
+    x --E--> E(x) --D--> D(E(x))
+
+with intended relationships
+
+    E(x) ~= T(x)
+    D(E(x)) ~= x
+
+Interpretation
+--------------
+- V is a tensor space for a modality.
+- For images, x can be an RGBA tensor in [0,1]^(H x W x 4).
+- For audio, x can be an audio tensor in an analogous tensor space.
+- T acts on the whole tensor object, not coordinate-by-coordinate through a separate grid object.
+- E is the learned forward model that approximates the tensor morphism T.
+- D is the learned reverse model that maps the encrypted tensor back toward the original tensor.
+
+Multimodal framing
+------------------
+- The current working case in the repository is image tensors.
+- The same tensor-algebra viewpoint is intended to extend to audio next.
+- The category-theoretic point is that the same kind of endomorphism T : V -> V can be studied on different modality-specific tensor spaces V.

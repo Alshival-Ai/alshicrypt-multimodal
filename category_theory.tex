@@ -1,0 +1,71 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{tikz-cd}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+\title{Tensor Algebra for the Encryption Algorithm:\\Extension to Image, Audio, Text, and Other Modalities}
+\author{Alshicrypt Multimodal}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Objects}
+\begin{itemize}
+    \item $V$: tensor space for a modality
+    \item $x \in V$: data tensor
+    \item $T : V \to V$: tensor morphism / endomorphism
+    \item $E : V \to V$: learned Encrypter
+    \item $D : V \to V$: learned Decrypter
+\end{itemize}
+
+\section*{Tensor-Morphism Picture}
+\[
+\begin{tikzcd}[column sep=huge, row sep=large]
+x \arrow[r, "T"] \arrow[d, "E"'] & T(x) \\
+E(x) \arrow[ur, dashed, "\approx"'] &
+\end{tikzcd}
+\]
+
+This expresses the intended learned relationship
+\[
+E(x) \approx T(x).
+\]
+
+\section*{Learned Reconstruction Picture}
+\[
+x \xrightarrow{\;E\;} E(x) \xrightarrow{\;D\;} D(E(x))
+\]
+
+with the intended reconstruction relation
+\[
+D(E(x)) \approx x.
+\]
+
+\section*{Interpretation}
+The object $x$ is a full tensor, and the morphism $T$ acts on that tensor as a
+whole. This is the tensor-algebra viewpoint: we treat the modality object
+itself as a tensor in a tensor space $V$ and study endomorphisms
+\[
+T : V \to V.
+\]
+
+In the learned system, the Encrypter $E$ is trained to approximate the forward
+tensor morphism, while the Decrypter $D$ is trained to map the transformed
+tensor back toward the original.
+
+\section*{Multimodal Examples}
+\begin{itemize}
+    \item For images, $x$ may be an RGBA tensor in $[0,1]^{H \times W \times 4}$.
+    \item For audio, $x$ may be a waveform tensor or feature tensor in an
+    analogous tensor space.
+\end{itemize}
+
+The current repository demonstrates the image case first, but the same
+tensor-space framing is intended to extend to audio next and, more generally,
+to text and other modalities that admit a tensor representation.
+
+\end{document}
