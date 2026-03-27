@@ -8,7 +8,8 @@ This directory contains a LaTeX draft paper for the current stochastic image enc
 - `references.bib`: bibliography
 - `scripts/generate_assets.py`: regenerates figures and metric macros from the current repo state
 - `generated/metrics.tex`: generated LaTeX macros used by `main.tex`
-- `figures/`: generated PNG figures used by the paper
+- `figures/`: generated PNG figures used by the paper when assets are regenerated locally
+- `../alshicrypt-multimodal.wiki/figures/`: currently tracked figure copies that the manuscript can also read directly
 
 ## Regenerate Assets
 

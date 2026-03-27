@@ -1,54 +1,96 @@
-# AlshiCrypt
+# Alshicrypt Multimodal
 
-AlshiCrypt is an experiment in **multi-modal, machine-learning-based encryption**. The idea is to treat visual and audio media as two halves of a single tensor and train a pair of neural networks, but only after picking a strictly invertible transform. We first sample a reversible (bijective) permutation across both modalities, then use that transform to synthesize training data so the learned encryptor/decryptor always has a perfect inverse to mimic.
+<p align="center">
+  <img src="https://alshival.ai/static/img/logos/brain1_transparent.png" alt="Alshival.Ai Hero" width="280" />
+</p>
 
-- an **encryptor** that learns to transform aligned image/audio tensors into apparently unrelated tensors, and
-- a **decryptor** that learns to undo the same transform and reconstruct the original signals.
+<p align="center"><strong>Alshival.Ai</strong></p>
 
-Because both networks are trained on the exact invertible transform that produced the data, the system behaves like a differentiable, key-conditioned cipher where the “key” is the randomly sampled media transform.
+Research prototype for learned image encoding/decoding using a shared stochastic distortion process.
 
-## Project workflow
+## Project Purpose
 
-1. **Sample a random transform** – `alshicrypt.random_media_transform` builds invertible permutations and channel shuffles for both modalities, guaranteeing that the same transform object can be inverted exactly.
-2. **Create paired training data** – `train.py` or `alshicrypt.generate` load files from `samples/images` and `samples/audio/wav`, apply the transform, and serialize `(original, encrypted)` tensor pairs.
-3. **Train encryptor/decryptor models** – `alshicrypt.generate` builds two autoencoders (see `src/alshicrypt/model.py`) and optimizes them until they reach near-perfect reconstruction accuracy on the held-out data, leveraging the fact that every training example shares the same invertible transform.
-4. **Evaluate / demo** – `sample.py` demonstrates the tensor pipeline, while the generation script prints per-epoch reconstruction accuracy so you can judge when the model has fully learned the mapping.
+This repository demonstrates a machine-learning workflow for image transformation in transit:
 
-## Repository guide
+1. Apply the same stochastic process to each source image (`Original -> Encoded`).
+2. Train an encoder model to learn that transformation.
+3. Train a decoder model to invert it (`Encoded -> Original`).
+4. Export pretrained encoder/decoder checkpoints for downstream applications.
 
-| Path | Purpose |
-| --- | --- |
-| `src/alshicrypt/data.py` | Media loading pipeline (CIFAR-style images and WAV audio). |
-| `src/alshicrypt/transforms.py` | Random invertible transforms applied jointly to images and audio. |
-| `src/alshicrypt/model.py` | Autoencoder definitions plus reconstruction-loss helpers. |
-| `src/alshicrypt/generate.py` | Orchestrates transform sampling, dataset generation, and encryptor/decryptor training. |
-| `train.py` | CLI helper that quickly builds a `.pt` dataset of transformed multimodal pairs. |
-| `sample.py` | Small demo that loads an image/audio tensor and optionally exercises a random transform. |
+The Pokemon dataset is used as a controlled, reproducible example.  
+Target applications include secure image workflows in healthcare and security.
 
-## Quick start
+## Research Framing
 
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e .
+- The encoder and decoder operate as a learned pair (conceptually similar to paired keys).
+- Sender side: encode image before transmission.
+- Receiver side: decode image to reconstruct the original content.
+- Shared stochastic generation setup is applied consistently across the dataset.
 
-# Train encryptor/decryptor on the bundled sample data
-python -m alshicrypt.generate \
-  --image-dir samples/images \
-  --audio-dir samples/audio/wav \
-  --num-train-images 200 \
-  --num-train-audio 200 \
-  --num-test-images 10 \
-  --num-test-audio 10
+## Repository Workflow
+
+### 1) Generate Distorted Dataset
+
+This script applies the same stochastic process settings to all PNGs under `pokemon/` and writes outputs to `pokemon_distorted/`.
+
+```powershell
+python pokemon_distort.py
 ```
 
-The command above prints accuracy for both models each epoch, stopping early once reconstruction error falls below the tolerance threshold.
+Resume support is built in:
 
-## Custom data
+- Existing outputs are skipped by default.
+- Use `--overwrite` to regenerate all images.
 
-Place your own PNG images under `samples/images` (or another directory referenced via `--image-dir`) and WAV files under `samples/audio/wav`. The CLI flags on `alshicrypt.generate` let you control how many items to draw for training and testing, learning rate, batch size, and the reconstruction tolerance.
+```powershell
+python pokemon_distort.py --overwrite
+```
 
-If you only need the serialized dataset for external experiments, run `python train.py --images <dir> --audio <dir> --num-images <N> --num-audio <M> --out dataset/train.pt` to save the paired tensors without training models.
+### 2) Prepare Training Pairs
 
-## Demo pipeline
+Builds a CSV manifest of matched `original/distorted` pairs.
 
-Use `python sample.py --demo-transform` to load a single image, convert it into the multimodal tensor representation, apply a fresh random transform, and report the max absolute reconstruction error when inverting the transform. This helps verify the deterministic tensor pipeline before full training.
+```powershell
+python prepare_training_pairs.py --original-root pokemon --encoded-root pokemon_distorted --out-csv models/pokemon_pairs.csv
+```
+
+### 3) Train Encoder Model
+
+Learns: `Original -> Encoded`
+
+```powershell
+python train_pokemon_model.py --stage encoder --original-root pokemon --encoded-root pokemon_distorted --epochs 500 --target-mae 0.0
+```
+
+### 4) Train Decoder Model
+
+Learns: `Encoded -> Original`
+
+```powershell
+python train_pokemon_model.py --stage decoder --original-root pokemon --encoded-root pokemon_distorted --epochs 500 --target-mae 0.0
+```
+
+## Pretrained Model Outputs
+
+Training writes checkpoints to `models/`:
+
+- `encoder_best.pt`
+- `encoder_best.ts` (TorchScript for app integration)
+- `encoder_last.pt`
+- `decoder_best.pt`
+- `decoder_best.ts` (TorchScript for app integration)
+- `decoder_last.pt`
+
+## Core Scripts
+
+- `pokemon_distort.py`: dataset distortion pipeline with progress bar and resume behavior
+- `prepare_training_pairs.py`: pair manifest generation
+- `train_pokemon_model.py`: GPU-first training loop for encoder/decoder
+- `training/models.py`: U-Net-like CNN architecture
+- `training/pokemon_pairs.py`: pair matching + dataset loader
+
+## Notes
+
+- Recommended: NVIDIA GPU with CUDA-enabled PyTorch.
+- `target-mae=0.0` is supported as a stopping criterion, but convergence to exact zero depends on architecture capacity, image preprocessing, numeric precision, and optimization settings.
+- This repository is a research prototype and not a replacement for standard, formally analyzed cryptographic protocols.
