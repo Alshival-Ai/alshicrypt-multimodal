@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PAPER_ROOT = REPO_ROOT / "paper"
 FIGURE_DIR = PAPER_ROOT / "figures"
 GENERATED_DIR = PAPER_ROOT / "generated"
-MODEL_DIR = REPO_ROOT / "models" / "quick_eval"
+MODEL_DIR = REPO_ROOT / "models" / "paper_eval"
 
 sys.path.insert(0, str(REPO_ROOT))
 
@@ -273,7 +273,7 @@ def generate_reconstruction_figure(
     if len(selected_names) == 1:
         axes = np.expand_dims(axes, axis=0)
 
-    column_titles = ["Original", "Encoded target", "Encoder output", "Decoder output"]
+    column_titles = ["Original", "Encrypted target", "Encrypter output", "Decrypter reconstruction"]
     for col, title in enumerate(column_titles):
         axes[0, col].set_title(title)
 

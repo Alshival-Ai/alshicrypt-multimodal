@@ -6,7 +6,9 @@
 
 <p align="center"><strong>Alshival.Ai</strong></p>
 
-Research prototype for learned image encryption/decryption using a shared stochastic distortion process.
+<p align="center">Built by <strong>The Data Team</strong> at <a href="https://alshival.ai">Alshival.Ai</a>.</p>
+
+Research prototype for multimodal learned encryption/decryption using a shared stochastic distortion process.
 
 ## Project Purpose
 
@@ -17,8 +19,12 @@ This repository demonstrates a machine-learning workflow for image transformatio
 3. Train a Decrypter model to invert it (`Encrypted -> Original`).
 4. Export pretrained forward/reverse checkpoints for downstream applications.
 
-The Pokemon dataset is used as a controlled, reproducible example.  
-Target applications include secure image workflows in healthcare and security.
+The Pokemon dataset is used as a controlled, reproducible image example.  
+The image pipeline is the current working modality in the repository. The broader research goal is multimodal: apply the same core transport, corruption, and learned inversion principles to other media types as they mature, with audio as the next planned target.
+
+Target applications include secure image and audio workflows in healthcare and security.
+
+This repository reflects the broader Alshival.Ai direction as The Data Team: building practical AI and data systems that can extend across modalities, starting with images and then carrying the same framework into audio.
 
 ## Research Framing
 
@@ -27,6 +33,7 @@ Target applications include secure image workflows in healthcare and security.
 - Receiver side: decrypt image to reconstruct the original content.
 - Shared stochastic generation setup is applied consistently across the dataset.
 - The repository CLI still uses `--stage encoder|decoder`; in docs and the paper, those correspond to `Encrypter` and `Decrypter`.
+- The current repository demonstrates the image case first; the same research direction is intended to extend to audio next under the same general framework.
 
 ## Repository Workflow
 

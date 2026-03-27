@@ -220,7 +220,7 @@ The public experiment uses the repository's current configuration:
     \item Forward schedule: $\NumSteps$ steps, linear $\beta_t$ from \BetaStart\ to \BetaEnd.
     \item Architecture: U-Net-like CNN with \ModelParamCount\ trainable parameters.
     \item Objective: elementwise $L_1$ loss.
-    \item Training logs used here: 20-epoch Encrypter and Decrypter runs from the repository's quick-eval model directory.
+    \item Training logs used here: 100-epoch Encrypter and Decrypter runs from the repository's `models/paper\_eval` directory.
 \end{itemize}
 
 These are training-set results, not holdout results. They are useful for understanding whether the endpoint maps can fit the current paired transformation, but they should not be interpreted as evidence of security or strong out-of-distribution generalization.
@@ -265,12 +265,12 @@ Table~\ref{tab:main-results} summarizes the main quantitative results. The direc
 \end{table}
 
 \subsection{Qualitative behavior}
-Figure~\ref{fig:reconstruction-grid} illustrates the current visual behavior. The encrypted targets are visually noisy and semantically obscured. The Encrypter should therefore be judged by how closely it matches that distorted transit target, not by similarity to the original image. The learned Encrypter captures the silhouette well but does not reproduce the target's multicolored endpoint distribution exactly. The learned Decrypter reconstructs shape reliably, but the recovered images remain muted and often collapse toward silhouette-first solutions.
+Figure~\ref{fig:reconstruction-grid} illustrates the current visual behavior. The encrypted targets are visually noisy and semantically obscured. The Encrypter should therefore be judged by how closely it matches that distorted transit target, not by similarity to the original image. The learned Encrypter now tracks the distorted target closely, including much of its clipped color distribution. The Decrypter recovers recognizable geometry and smooth tonal structure, but color fidelity remains limited and the outputs are still visibly softer than the originals.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{reconstruction_grid.png}
-    \caption{Qualitative examples from the current repository checkpoints: \EncoderExampleA, \EncoderExampleB, \EncoderExampleC, and \EncoderExampleD. Left-to-right within each example, the Encrypter output is supposed to resemble the distorted encrypted target rather than the original image. The Decrypter recovers recognizable geometry, but color fidelity remains limited, which is consistent with the severe endpoint information loss predicted by the theory.}
+    \caption{Qualitative examples from the current repository checkpoints: \EncoderExampleA, \EncoderExampleB, \EncoderExampleC, and \EncoderExampleD. Left-to-right within each example, the Encrypter output is supposed to resemble the distorted encrypted target rather than the original image. The final column is the Decrypter reconstruction from that encrypted input. The new paper checkpoints recover geometry and some smooth shading reliably, although the reconstructions remain softer and less colorful than the originals.}
     \label{fig:reconstruction-grid}
 \end{figure}
 
