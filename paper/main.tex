@@ -13,7 +13,7 @@
 
 \newtheorem{proposition}{Proposition}
 
-\title{\Large Learned Encoder-Decoder Models for Diffusion-Like Image Encryption:\\A Machine-Learning Approach Based on Stochastic Processes}
+\title{\Large Learned Encrypter-Decrypter Models for Diffusion-Like Image Encryption:\\A Machine-Learning Approach Based on Stochastic Processes}
 \author{Samuel Cavazos\\Alshival.AI}
 \date{\today}
 
@@ -21,19 +21,19 @@
 \maketitle
 
 \begin{abstract}
-This paper documents a research prototype for learned image encryption based on a fixed stochastic forward process and paired neural endpoint maps. Starting from RGBA sprite images, we apply a diffusion-style corruption process to RGB channels while preserving alpha, then train one U-Net-like network to emulate the forward transform and a second network to learn its inverse. The design was motivated by two practical observations: first, early experiments with deterministic non-linear tensor morphisms were difficult to generalize across images; second, stochastic corruption offers analytic control over signal attenuation, direct compatibility with one-step denoising ideas from consistency models, and a tunable bridge between structure preservation and information destruction.
+This paper documents a research prototype for learned image encryption based on a fixed stochastic forward process and paired neural endpoint maps. Starting from RGBA sprite images, we apply a diffusion-style corruption process to RGB channels while preserving alpha, then train one U-Net-like network to emulate the forward transform and a second network to learn its inverse. In this manuscript, the forward model is called the \emph{Encrypter} and the reverse model is called the \emph{Decrypter} to keep the transport framing explicit: the Encrypter is supposed to reproduce the distorted transit image, while the Decrypter is supposed to reconstruct the original image from that distorted input. The design was motivated by two practical observations: first, early experiments with deterministic non-linear tensor morphisms were difficult to generalize across images; second, stochastic corruption offers analytic control over signal attenuation, direct compatibility with one-step denoising ideas from consistency models, and a tunable bridge between structure preservation and information destruction.
 
-The resulting system is successful as a research instrument: it trains stably, produces reproducible paired data, and learns low-error endpoint regressors on the current dataset. As a toy example, one can view the workflow as a machine-learning version of ``Who's That Pokemon?'': Mew is mapped to an obscured encoded representation, transmitted in that form, and then reconstructed by a decoder at the receiving end, with the original sprite reused below as the toy decryption target. It is not yet a cryptosystem. For the default schedule used here, the pre-clipping signal coefficient after \NumSteps\ steps is only $\alpha_T=\FinalAlpha$, meaning that the RGB signal energy is effectively annihilated before clipping and quantization. Empirically, the final encoded RGB values have correlation \EncodedRGBCorrelation\ with the source image and \EncodedSaturationPct\% of encoded RGB channel values lie exactly at $0$ or $1$. The mathematical and empirical conclusion is that the current process is excellent for studying learned reconstruction under severe stochastic corruption, but exact reversibility and cryptographic security require stronger design constraints than those implemented in this prototype.
+The resulting system is successful as a research instrument: it trains stably, produces reproducible paired data, and learns low-error endpoint regressors on the current dataset. As a toy example, one can view the workflow as a machine-learning version of ``Who's That Pokemon?'': Mew is mapped to an obscured encrypted representation, transmitted in that form, and then reconstructed by a Decrypter at the receiving end, with the original sprite reused below as the toy decryption target. It is not yet a cryptosystem. For the default schedule used here, the pre-clipping signal coefficient after \NumSteps\ steps is only $\alpha_T=\FinalAlpha$, meaning that the RGB signal energy is effectively annihilated before clipping and quantization. Empirically, the final encrypted RGB values have correlation \EncodedRGBCorrelation\ with the source image and \EncodedSaturationPct\% of encrypted RGB channel values lie exactly at $0$ or $1$. The mathematical and empirical conclusion is that the current process is excellent for studying learned reconstruction under severe stochastic corruption, but exact reversibility and cryptographic security require stronger design constraints than those implemented in this prototype.
 
 \begin{center}
     \setlength{\tabcolsep}{4pt}
     \begin{tabular}{ccccc}
         \includegraphics[width=0.13\linewidth]{../pokemon/images/mew.png} &
-        $\xrightarrow{\text{encoder}}$ &
+        $\xrightarrow{\text{Encrypter}}$ &
         \includegraphics[width=0.13\linewidth]{../pokemon_distorted/mew.png} &
-        $\xrightarrow{\text{decoder}}$ &
+        $\xrightarrow{\text{Decrypter}}$ &
         \includegraphics[width=0.13\linewidth]{../pokemon/images/mew.png} \\
-        {\footnotesize Mew (Original)} && {\footnotesize Mew (Encrypted)} && {\footnotesize Mew (Decrypted target)}
+        {\footnotesize Mew (Original)} && {\footnotesize Mew (Encrypted transit image)} && {\footnotesize Mew (Decrypted target)}
     \end{tabular}
 \end{center}
 
@@ -56,9 +56,9 @@ The resulting system is successful as a research instrument: it trains stably, p
 \end{abstract}
 
 \section{Introduction}
-This repository explores whether a machine-learning model pair can act like an encoder/decoder system for images after a deliberately destructive forward transform. The motivating application is not ordinary image compression; it is the stronger ambition of learning an \emph{encryption-like} transport mechanism in which a sender applies a difficult-to-interpret transformation and a receiver learns the inverse.
+This repository explores whether a machine-learning model pair can act like an Encrypter/Decrypter system for images after a deliberately destructive forward transform. The motivating application is not ordinary image compression; it is the stronger ambition of learning an \emph{encryption-like} transport mechanism in which a sender applies a difficult-to-interpret transformation and a receiver learns the inverse.
 
-One long-term application class is privacy-sensitive image transport. In a future secure version of this framework, a sender-side model could encode a sensitive image, such as a radiology scan, pathology slide, or other healthcare image, into a transit representation that is difficult to interpret directly, send that representation over a network, and then use a receiver-side model to decode it after arrival. If that workflow were paired with keyed randomness and exact authorized recovery, it could complement conventional transport protections by reducing exposure of directly viewable patient content while images move between institutions or services. In that conceptual pipeline, ``encryption in transit'' refers to the middle stage, where only the encoded representation is transmitted between endpoints. The original image remains at the sender, and the decrypted reconstruction appears only after the encoded payload reaches the receiver. The current repository does not satisfy the security, reversibility, or regulatory requirements for protected health information; here the healthcare example is a motivating application target, not a claim of deployment readiness.
+One long-term application class is privacy-sensitive image transport. In a future secure version of this framework, a sender-side model could encrypt a sensitive image, such as a radiology scan, pathology slide, or other healthcare image, into a transit representation that is difficult to interpret directly, send that representation over a network, and then use a receiver-side model to decrypt it after arrival. If that workflow were paired with keyed randomness and exact authorized recovery, it could complement conventional transport protections by reducing exposure of directly viewable patient content while images move between institutions or services. In that conceptual pipeline, ``encryption in transit'' refers to the middle stage, where only the encrypted representation is transmitted between endpoints. The original image remains at the sender, and the decrypted reconstruction appears only after the encrypted payload reaches the receiver. The current repository does not satisfy the security, reversibility, or regulatory requirements for protected health information; here the healthcare example is a motivating application target, not a claim of deployment readiness.
 
 Our early internal experiments focused on deterministic non-linear tensor morphisms: handcrafted non-linear spatial and channel transforms designed to scramble image tensors without explicit randomness. In practice, these morphisms were difficult to generalize. They often behaved like brittle texture-specific warps: they could fit seen patterns, but they did not produce a clean family of transformations with obvious scaling laws or analytically controlled information loss. That experience motivated a shift toward a stochastic process.
 
@@ -95,7 +95,7 @@ that distorts pixel values while remaining invertible by construction, and then 
 \end{equation}
 In the idealized setting, the sender applies $\mathcal{F}$ and the receiver applies $\mathcal{F}^{-1}$, while machine-learning models are trained to approximate $F$ and $F^{-1}$ from data.
 
-The same viewpoint is not limited to images. Once a medium is represented as a function from an index set into a local attribute space, the same endomorphism idea extends naturally to other modalities. For example, audio can be modeled as a function from time indices to amplitude values or short local feature vectors, and an invertible endomorphism on that value space would induce an analogous encode/decode operator for sound.
+The same viewpoint is not limited to images. Once a medium is represented as a function from an index set into a local attribute space, the same endomorphism idea extends naturally to other modalities. For example, audio can be modeled as a function from time indices to amplitude values or short local feature vectors, and an invertible endomorphism on that value space would induce an analogous encrypt/decrypt operator for sound.
 
 This paper studies one stochastic route toward that broader objective. In the current public prototype, all tensors are normalized to $[0,1]$ during processing and learning. The implemented endpoint map is diffusion-like and analytically tractable before clipping and quantization, but the stored PNG pipeline is not exactly invertible. The endomorphism framing is therefore best understood here as the conceptual target for the research program, rather than as a property already achieved by the released implementation.
 
@@ -149,7 +149,7 @@ Two separate neural networks are trained:
 f_{\theta_e} &: x_0 \mapsto z, \\
 f_{\theta_d} &: z \mapsto x_0.
 \end{align}
-Both are instantiated as the same compact U-Net-like CNN with \ModelParamCount\ trainable parameters, built from three downsampling blocks, a bottleneck, and three decoder blocks with skip connections following the U-Net design pattern \citep{ronneberger2015unet}.
+In repository code and CLI flags these stages are still named `encoder' and `decoder' for backward compatibility, but in the paper we refer to $f_{\theta_e}$ as the \emph{Encrypter} and $f_{\theta_d}$ as the \emph{Decrypter}. Both are instantiated as the same compact U-Net-like CNN with \ModelParamCount\ trainable parameters, built from three downsampling blocks, a bottleneck, and three decoder blocks with skip connections following the U-Net design pattern \citep{ronneberger2015unet}.
 
 Training uses an $L_1$ objective:
 \begin{align}
@@ -220,7 +220,7 @@ The public experiment uses the repository's current configuration:
     \item Forward schedule: $\NumSteps$ steps, linear $\beta_t$ from \BetaStart\ to \BetaEnd.
     \item Architecture: U-Net-like CNN with \ModelParamCount\ trainable parameters.
     \item Objective: elementwise $L_1$ loss.
-    \item Training logs used here: 20-epoch encoder and decoder runs from the repository's quick-eval model directory.
+    \item Training logs used here: 20-epoch Encrypter and Decrypter runs from the repository's quick-eval model directory.
 \end{itemize}
 
 These are training-set results, not holdout results. They are useful for understanding whether the endpoint maps can fit the current paired transformation, but they should not be interpreted as evidence of security or strong out-of-distribution generalization.
@@ -237,12 +237,12 @@ The encoded RGB endpoint is heavily saturated and nearly decorrelated from the s
 This validates the intended behavior of the stochastic transform: the visible endpoint is hard to interpret directly. It also explains why exact inversion is mathematically impossible in the current design.
 
 \subsection{Training behavior}
-Both endpoint networks train smoothly over the first 20 epochs, with monotone decreases in train $L_1$ and dataset MAE. Figure~\ref{fig:training-curves} shows that the decoder converges slightly better than the encoder on this dataset.
+Both endpoint networks train smoothly over the first 20 epochs, with monotone decreases in train $L_1$ and dataset MAE. Figure~\ref{fig:training-curves} shows that the Decrypter converges slightly better than the Encrypter on this dataset.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{training_curves.png}
-    \caption{Training dynamics for the encoder and decoder endpoint networks. Both optimize stably, supporting the claim that the stochastic pairing setup is learnable even with a relatively small convolutional model.}
+    \caption{Training dynamics for the Encrypter and Decrypter endpoint networks. Both optimize stably, supporting the claim that the stochastic pairing setup is learnable even with a relatively small convolutional model.}
     \label{fig:training-curves}
 \end{figure}
 
@@ -253,7 +253,7 @@ Table~\ref{tab:main-results} summarizes the main quantitative results. The direc
     \centering
     \begin{tabular}{lccc}
         \toprule
-        Metric & Direct baseline & Encoder & Decoder \\
+        Metric & Direct baseline & Encrypter & Decrypter \\
         \midrule
         All-channel MAE & \BaselineMAE & \EncoderDatasetMAE & \DecoderDatasetMAE \\
         RGB-only MAE & \BaselineRGBMAE & \EncoderRGBMAE & \DecoderRGBMAE \\
@@ -265,12 +265,12 @@ Table~\ref{tab:main-results} summarizes the main quantitative results. The direc
 \end{table}
 
 \subsection{Qualitative behavior}
-Figure~\ref{fig:reconstruction-grid} illustrates the current visual behavior. The encoded targets are visually noisy and semantically obscured. The learned encoder captures the silhouette well but does not reproduce the target's multicolored endpoint distribution exactly. The learned decoder reconstructs shape reliably, but the recovered images remain muted and often collapse toward silhouette-first solutions.
+Figure~\ref{fig:reconstruction-grid} illustrates the current visual behavior. The encrypted targets are visually noisy and semantically obscured. The Encrypter should therefore be judged by how closely it matches that distorted transit target, not by similarity to the original image. The learned Encrypter captures the silhouette well but does not reproduce the target's multicolored endpoint distribution exactly. The learned Decrypter reconstructs shape reliably, but the recovered images remain muted and often collapse toward silhouette-first solutions.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{reconstruction_grid.png}
-    \caption{Qualitative examples from the current repository checkpoints: \EncoderExampleA, \EncoderExampleB, \EncoderExampleC, and \EncoderExampleD. The decoder recovers recognizable geometry, but color fidelity remains limited, which is consistent with the severe endpoint information loss predicted by the theory.}
+    \caption{Qualitative examples from the current repository checkpoints: \EncoderExampleA, \EncoderExampleB, \EncoderExampleC, and \EncoderExampleD. Left-to-right within each example, the Encrypter output is supposed to resemble the distorted encrypted target rather than the original image. The Decrypter recovers recognizable geometry, but color fidelity remains limited, which is consistent with the severe endpoint information loss predicted by the theory.}
     \label{fig:reconstruction-grid}
 \end{figure}
 
@@ -279,7 +279,7 @@ Figure~\ref{fig:pixel-statistics} reinforces the same conclusion. The encoded RG
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{pixel_statistics.png}
-    \caption{Left: original and encoded RGB intensity distributions. Right: error reduction relative to the direct baseline. The current decoder improves over the baseline, but the improvement is incremental rather than evidence of full reversibility.}
+    \caption{Left: original and encrypted RGB intensity distributions. Right: error reduction relative to the direct baseline. The current Decrypter improves over the baseline, but the improvement is incremental rather than evidence of full reversibility.}
     \label{fig:pixel-statistics}
 \end{figure}
 
@@ -293,7 +293,7 @@ First, it gave the experiment a mathematically transparent forward path. Second,
 Three limitations are structural rather than incidental.
 
 \paragraph{The process is not reversible.}
-Because clipping and quantization destroy information, the decoder is solving an image-reconstruction problem under a strong prior, not decrypting a formally invertible ciphertext.
+Because clipping and quantization destroy information, the Decrypter is solving an image-reconstruction problem under a strong prior, not decrypting a formally invertible ciphertext.
 
 \paragraph{The current implementation leaks alpha.}
 Preserving alpha means one quarter of the channels are already solved. This lowers aggregate error and exposes silhouette information directly.

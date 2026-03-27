@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.23)  26 MAR 2026 18:25
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.23)  26 MAR 2026 19:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -574,9 +574,9 @@ Package pdftex.def Info: ../pokemon_distorted/claydol.png  used on input line 4
  [1
 
 {C:/Users/SamuelCavazos/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map} <../p
-okemon/images/mew.png> <../pokemon_distorted/mew.png> <../pokemon_distorted/ros
-elia.png> <../pokemon_distorted/vivillon.png> <../pokemon_distorted/claydol.png
->] [2] [3] [4] [5]
+okemon/images/mew.png> <../pokemon_distorted/mew.png>] [2 <../pokemon_distorted
+/roselia.png> <../pokemon_distorted/vivillon.png> <../pokemon_distorted/claydol
+.png>] [3] [4] [5]
 <../alshicrypt-multimodal.wiki/figures/forward_process.png, id=192, 712.845pt x
  265.428pt>
 File: ../alshicrypt-multimodal.wiki/figures/forward_process.png Graphic file (t
@@ -594,7 +594,8 @@ ype png)
 Package pdftex.def Info: ../alshicrypt-multimodal.wiki/figures/training_curves.
 png  used on input line 244.
 (pdftex.def)             Requested size: 469.75502pt x 174.42969pt.
-<../alshicrypt-multimodal.wiki/figures/reconstruction_grid.png, id=205, 710.545
+ [7]
+<../alshicrypt-multimodal.wiki/figures/reconstruction_grid.png, id=213, 710.545
 5pt x 714.816pt>
 File: ../alshicrypt-multimodal.wiki/figures/reconstruction_grid.png Graphic fil
 e (type png)
@@ -602,7 +603,6 @@ e (type png)
 Package pdftex.def Info: ../alshicrypt-multimodal.wiki/figures/reconstruction_g
 rid.png  used on input line 272.
 (pdftex.def)             Requested size: 469.75502pt x 472.57625pt.
- [7]
 <../alshicrypt-multimodal.wiki/figures/pixel_statistics.png, id=215, 714.816pt 
 x 265.428pt>
 File: ../alshicrypt-multimodal.wiki/figures/pixel_statistics.png Graphic file (
@@ -640,13 +640,13 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 993B90B5742FF3D891C652AE2ED9C620;4615.
  ) 
 Here is how much of TeX's memory you used:
- 13152 strings out of 467871
- 206612 string characters out of 5414504
- 659573 words of memory out of 5000000
- 41617 multiletter control sequences out of 15000+600000
- 648791 words of font info for 182 fonts, out of 8000000 for 9000
+ 13162 strings out of 467871
+ 206717 string characters out of 5414504
+ 658730 words of memory out of 5000000
+ 41619 multiletter control sequences out of 15000+600000
+ 649512 words of font info for 187 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,18n,79p,1271b,518s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,18n,79p,1279b,668s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\SamuelCavazos\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
 600\tcrm1095.pk><C:/Users/SamuelCavazos/AppData/Local/Programs/MiKTeX/fonts/typ
 e1/public/amsfonts/cm/cmbx10.pfb><C:/Users/SamuelCavazos/AppData/Local/Programs
@@ -669,9 +669,9 @@ amuelCavazos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8
 msfonts/cm/cmti10.pfb><C:/Users/SamuelCavazos/AppData/Local/Programs/MiKTeX/fon
 ts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/SamuelCavazos/AppData/Local/Pr
 ograms/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on main.pdf (12 pages, 912978 bytes).
+Output written on main.pdf (12 pages, 915194 bytes).
 PDF statistics:
  354 PDF objects out of 1000 (max. 8388607)
  83 named destinations out of 1000 (max. 500000)
- 41726 words of extra memory for PDF output out of 42996 (max. 10000000)
+ 43774 words of extra memory for PDF output out of 51595 (max. 10000000)
 

@@ -6,26 +6,27 @@
 
 <p align="center"><strong>Alshival.Ai</strong></p>
 
-Research prototype for learned image encoding/decoding using a shared stochastic distortion process.
+Research prototype for learned image encryption/decryption using a shared stochastic distortion process.
 
 ## Project Purpose
 
 This repository demonstrates a machine-learning workflow for image transformation in transit:
 
-1. Apply the same stochastic process to each source image (`Original -> Encoded`).
-2. Train an encoder model to learn that transformation.
-3. Train a decoder model to invert it (`Encoded -> Original`).
-4. Export pretrained encoder/decoder checkpoints for downstream applications.
+1. Apply the same stochastic process to each source image (`Original -> Encrypted`).
+2. Train an Encrypter model to learn that transformation.
+3. Train a Decrypter model to invert it (`Encrypted -> Original`).
+4. Export pretrained forward/reverse checkpoints for downstream applications.
 
 The Pokemon dataset is used as a controlled, reproducible example.  
 Target applications include secure image workflows in healthcare and security.
 
 ## Research Framing
 
-- The encoder and decoder operate as a learned pair (conceptually similar to paired keys).
-- Sender side: encode image before transmission.
-- Receiver side: decode image to reconstruct the original content.
+- The Encrypter and Decrypter operate as a learned pair (conceptually similar to paired keys).
+- Sender side: encrypt image before transmission.
+- Receiver side: decrypt image to reconstruct the original content.
 - Shared stochastic generation setup is applied consistently across the dataset.
+- The repository CLI still uses `--stage encoder|decoder`; in docs and the paper, those correspond to `Encrypter` and `Decrypter`.
 
 ## Repository Workflow
 
@@ -54,17 +55,17 @@ Builds a CSV manifest of matched `original/distorted` pairs.
 python prepare_training_pairs.py --original-root pokemon --encoded-root pokemon_distorted --out-csv models/pokemon_pairs.csv
 ```
 
-### 3) Train Encoder Model
+### 3) Train Encrypter Model
 
-Learns: `Original -> Encoded`
+Learns: `Original -> Encrypted`
 
 ```powershell
 python train_pokemon_model.py --stage encoder --original-root pokemon --encoded-root pokemon_distorted --epochs 500 --target-mae 0.0
 ```
 
-### 4) Train Decoder Model
+### 4) Train Decrypter Model
 
-Learns: `Encoded -> Original`
+Learns: `Encrypted -> Original`
 
 ```powershell
 python train_pokemon_model.py --stage decoder --original-root pokemon --encoded-root pokemon_distorted --epochs 500 --target-mae 0.0
@@ -85,7 +86,7 @@ Training writes checkpoints to `models/`:
 
 - `pokemon_distort.py`: dataset distortion pipeline with progress bar and resume behavior
 - `prepare_training_pairs.py`: pair manifest generation
-- `train_pokemon_model.py`: GPU-first training loop for encoder/decoder
+- `train_pokemon_model.py`: GPU-first training loop for the forward (`encoder`/Encrypter) and reverse (`decoder`/Decrypter) models
 - `training/models.py`: U-Net-like CNN architecture
 - `training/pokemon_pairs.py`: pair matching + dataset loader
 
