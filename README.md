@@ -91,6 +91,11 @@ Training writes checkpoints to `models/`:
 
 Paper-ready pretrained checkpoints are also included under `models/paper_eval/` so others can test the current Encrypter/Decrypter pair directly without retraining first.
 
+## Paper Alignment
+
+The GitHub repo and the research paper are intended to stay tightly aligned.
+For the canonical paper-sync workflow and source-of-truth files, see `PAPER_SYNC.md`.
+
 ## Core Scripts
 
 - `pokemon_distort.py`: dataset distortion pipeline with progress bar and resume behavior

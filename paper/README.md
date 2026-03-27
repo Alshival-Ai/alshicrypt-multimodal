@@ -11,6 +11,18 @@ This directory contains a LaTeX draft paper for the current stochastic image enc
 - `figures/`: generated PNG figures used by the paper when assets are regenerated locally
 - `../alshicrypt-multimodal.wiki/figures/`: currently tracked figure copies that the manuscript can also read directly
 
+## Source of Truth
+
+The paper is intended to stay aligned with the checked-in code and paper-ready checkpoints.
+
+- canonical checkpoints: `../models/paper_eval/`
+- canonical generator: `scripts/generate_assets.py`
+- generated artifacts: `generated/metrics.tex`, `generated/metrics.json`, and `figures/*.png`
+
+Do not hand-edit generated metrics or paper figures. Regenerate them from the current repo state.
+
+For the full repo-paper synchronization workflow, see `../PAPER_SYNC.md`.
+
 ## Regenerate Assets
 
 From the repository root:
@@ -18,6 +30,8 @@ From the repository root:
 ```powershell
 python paper/scripts/generate_assets.py
 ```
+
+If the paper checkpoints change, regenerate assets before rebuilding the manuscript.
 
 ## Compile
 

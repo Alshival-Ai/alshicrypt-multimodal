@@ -273,13 +273,6 @@ This validates the intended behavior of the stochastic transform: the visible en
 \subsection{Training behavior}
 Both endpoint networks train smoothly over the first 20 epochs, with monotone decreases in train $L_1$ and dataset MAE. Figure~\ref{fig:training-curves} shows that the Decrypter converges slightly better than the Encrypter on this dataset.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{training_curves.png}
-    \caption{Training dynamics for the Encrypter and Decrypter endpoint networks. Both optimize stably, supporting the claim that the stochastic pairing setup is learnable even with a relatively small convolutional model.}
-    \label{fig:training-curves}
-\end{figure}
-
 \subsection{Quantitative endpoint accuracy}
 Table~\ref{tab:main-results} summarizes the main quantitative results. The direct baseline compares the original image to the encoded image without a learned model. Both learned models improve substantially over that baseline.
 
@@ -297,6 +290,13 @@ Table~\ref{tab:main-results} summarizes the main quantitative results. The direc
     \caption{Dataset-level endpoint metrics on the current paired dataset. All-channel MAE is lower than RGB-only MAE because alpha is preserved exactly by the forward generator.}
     \label{tab:main-results}
 \end{table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{training_curves.png}
+    \caption{Training dynamics for the Encrypter and Decrypter endpoint networks. Both optimize stably, supporting the claim that the stochastic pairing setup is learnable even with a relatively small convolutional model.}
+    \label{fig:training-curves}
+\end{figure}
 
 \subsection{Qualitative behavior}
 Figure~\ref{fig:reconstruction-grid} illustrates the current visual behavior. The encrypted targets are visually noisy and semantically obscured. The Encrypter should therefore be judged by how closely it matches that distorted transit target, not by similarity to the original image. The learned Encrypter now tracks the distorted target closely, including much of its clipped color distribution. The Decrypter recovers recognizable geometry and smooth tonal structure, but color fidelity remains limited and the outputs are still visibly softer than the originals.
