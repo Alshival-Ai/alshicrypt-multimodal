@@ -59,7 +59,7 @@ tensor back toward the original.
 
 \section*{Multimodal Examples}
 \begin{itemize}
-    \item For images, $x$ may be an RGBA tensor in $[0,1]^{H \times W \times 4}$.
+    \item For images, $x$ may be a tensor with RGB values in $\{0,\dots,255\}^{H \times W \times 3}$ together with a preserved alpha mask.
     \item For audio, $x$ may be a waveform tensor or feature tensor in an
     analogous tensor space.
 \end{itemize}

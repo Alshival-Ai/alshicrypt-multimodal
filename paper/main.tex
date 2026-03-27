@@ -21,7 +21,7 @@
 \maketitle
 
 \begin{abstract}
-This paper documents a research prototype for learned image encryption based on a fixed stochastic forward process and paired neural endpoint maps. Starting from RGBA sprite images, we apply a diffusion-style corruption process to RGB channels while preserving alpha, then train one U-Net-like network to emulate the forward transform and a second network to learn its inverse. In this manuscript, the forward model is called the \emph{Encrypter} and the reverse model is called the \emph{Decrypter} to keep the transport framing explicit: the Encrypter is supposed to reproduce the distorted transit image, while the Decrypter is supposed to reconstruct the original image from that distorted input. The design was motivated by two practical observations: first, early experiments with deterministic non-linear tensor morphisms were difficult to generalize across images; second, stochastic corruption offers analytic control over signal attenuation, direct compatibility with one-step denoising ideas from consistency models, and a tunable bridge between structure preservation and information destruction.
+This paper documents a research prototype for learned image encryption based on a fixed stochastic forward process and paired neural endpoint maps. Starting from RGBA sprite images, we apply a diffusion-style corruption process to the RGB channels while preserving alpha, then train one U-Net-like network to emulate the forward transform and a second network to learn its inverse. In the implemented system, RGB is treated as a discrete $8$-bit lattice and alpha is passed through unchanged rather than learned. In this manuscript, the forward model is called the \emph{Encrypter} and the reverse model is called the \emph{Decrypter} to keep the transport framing explicit: the Encrypter is supposed to reproduce the distorted transit image, while the Decrypter is supposed to reconstruct the original image from that distorted input. The design was motivated by two practical observations: first, early experiments with deterministic non-linear tensor morphisms were difficult to generalize across images; second, stochastic corruption offers analytic control over signal attenuation, direct compatibility with one-step denoising ideas from consistency models, and a tunable bridge between structure preservation and information destruction.
 
 The resulting system is successful as a research instrument: it trains stably, produces reproducible paired data, and learns low-error endpoint regressors on the current dataset. As a toy example, one can view the workflow as a machine-learning version of ``Who's That Pokemon?'': Mew is mapped to an obscured encrypted representation, transmitted in that form, and then reconstructed by a Decrypter at the receiving end, with the actual Decrypter output shown below rather than the original sprite reused as a placeholder. It is not yet a cryptosystem. For the default schedule used here, the pre-clipping signal coefficient after \NumSteps\ steps is only $\alpha_T=\FinalAlpha$, meaning that the RGB signal energy is effectively annihilated before clipping and quantization. Empirically, the final encrypted RGB values have correlation \EncodedRGBCorrelation\ with the source image and \EncodedSaturationPct\% of encrypted RGB channel values lie exactly at $0$ or $1$. The mathematical and empirical conclusion is that the current process is excellent for studying learned reconstruction under severe stochastic corruption, but exact reversibility and cryptographic security require stronger design constraints than those implemented in this prototype.
 
@@ -33,7 +33,7 @@ The resulting system is successful as a research instrument: it trains stably, p
         \includegraphics[width=0.13\linewidth]{../pokemon_distorted/mew.png} &
         $\xrightarrow{\text{Decrypter}}$ &
         \includegraphics[width=0.13\linewidth]{mew_decrypter_reconstruction.png} \\
-        {\footnotesize Mew (Original)} && {\footnotesize Mew (Encrypted transit image)} && {\footnotesize Mew (Actual Decrypter reconstruction)}
+        {\footnotesize Mew (Original)} && {\footnotesize Mew (Encrypted transit image)} && {\footnotesize Mew (1000-epoch Decrypter reconstruction)}
     \end{tabular}
 \end{center}
 
@@ -77,9 +77,9 @@ This paper makes four concrete contributions:
 \subsection{Images as functions and the endomorphism viewpoint}
 We can formalize the data domain at the pixel level. Let
 \begin{equation}
-A = [0,1]^4
+A = \{0,\dots,255\}^3 \times [0,1]
 \end{equation}
-denote the normalized RGBA attribute space of a single pixel. Let $\Omega$ denote a finite coordinate grid. An image can then be viewed as a function
+denote the implemented pixel attribute space of a single sprite sample: discrete RGB values together with a transparency value. In the current repository, alpha is preserved exactly from input to output, and for the Pokemon sprites it is effectively binary. Let $\Omega$ denote a finite coordinate grid. An image can then be viewed as a function
 \begin{equation}
 i : \Omega \to A,
 \end{equation}
@@ -97,14 +97,14 @@ In the idealized setting, the sender applies $\mathcal{F}$ and the receiver appl
 
 The same viewpoint is not limited to images. Once a medium is represented as a function from an index set into a local attribute space, the same endomorphism idea extends naturally to other modalities. For example, audio can be modeled as a function from time indices to amplitude values or short local feature vectors, and an invertible endomorphism on that value space would induce an analogous encrypt/decrypt operator for sound.
 
-This paper studies one stochastic route toward that broader objective. In the current public prototype, all tensors are normalized to $[0,1]$ during processing and learning. The implemented endpoint map is diffusion-like and analytically tractable before clipping and quantization, but the stored PNG pipeline is not exactly invertible. The endomorphism framing is therefore best understood here as the conceptual target for the research program, rather than as a property already achieved by the released implementation.
+This paper studies one stochastic route toward that broader objective. In the current public prototype, RGB semantics live on the discrete $8$-bit lattice even though the neural network internally processes rescaled floating-point tensors. The implemented endpoint map is diffusion-like and analytically tractable before clipping and quantization, but the stored PNG pipeline is not exactly invertible. The endomorphism framing is therefore best understood here as the conceptual target for the research program, rather than as a property already achieved by the released implementation.
 
 \subsection{Tensor algebra as the broader category-theoretic framing}
 The image-as-function viewpoint is useful because it exposes the image case cleanly, but the broader research program is better expressed one level up in tensor algebra. In that broader view, image and audio examples are best understood as concrete cases that help us study and understand the framework, not as the boundary of the framework itself. Instead of privileging coordinates first, we can regard a modality sample as a tensor
 \begin{equation}
 x \in V,
 \end{equation}
-where $V$ is a modality-specific tensor space. For the current repository, $V$ is the space of normalized RGBA image tensors; in future instances, $V$ could instead be an audio waveform space, a spectrogram space, a token-embedding tensor space for text, or another tensorized data domain. The point of the formulation is to generalize across modalities, with image and audio serving as especially intuitive cases for building understanding.
+where $V$ is a modality-specific tensor space. For the current repository, $V$ is the space of image tensors with discrete $8$-bit RGB values and a preserved alpha mask; in future instances, $V$ could instead be an audio waveform space, a spectrogram space, a token-embedding tensor space for text, or another tensorized data domain. The point of the formulation is to generalize across modalities, with image and audio serving as especially intuitive cases for building understanding.
 
 In that formulation, the encryption algorithm is modeled as a tensor morphism
 \begin{equation}
@@ -134,7 +134,7 @@ This is the category-theoretic version of the endomorphism viewpoint for the enc
 This tensor-space abstraction clarifies why the current image results matter beyond images themselves. The immediate contribution of the repository is an image-tensor instantiation, but the larger idea is a modality-agnostic encryption/decryption program built from endomorphisms on tensor spaces. In that sense, image and audio should be read as understanding-generating examples of the formalism, whereas the research target is a transferable framework that can be adapted to many kinds of modality.
 
 \subsection{Why stochastic corruption is attractive}
-Let $x_0 \in [0,1]^{H \times W \times 4}$ denote a normalized RGBA image. A deterministic tensor morphism seeks a map
+Let $x_0 \in \{0,\dots,255\}^{H \times W \times 3} \times [0,1]^{H \times W \times 1}$ denote an RGBA image with discrete RGB values and a transparency mask. A deterministic tensor morphism seeks a map
 \begin{equation}
 z = g(x_0),
 \end{equation}
@@ -155,9 +155,9 @@ Consistency models learn functions that map points on a noise path toward a shar
 \subsection{Data domain}
 The current repository uses \NumPairs\ Pokemon sprite pairs as a controlled RGBA image dataset. Let
 \begin{equation}
-x_0 = (r_0, g_0, b_0, a_0) \in [0,1]^{H \times W \times 4}.
+x_0 = (r_0, g_0, b_0, a_0) \in \{0,\dots,255\}^{H \times W \times 3} \times [0,1]^{H \times W \times 1}.
 \end{equation}
-Here all channels are normalized to $[0,1]$ tensors before processing. The RGB channels are treated as the signal to corrupt; the alpha channel is preserved exactly in the current implementation.
+Here the semantic RGB domain is discrete $8$-bit color, while the implementation rescales RGB to floating point internally for convolutional processing. The RGB channels are treated as the signal to corrupt; the alpha channel is preserved exactly in the current implementation rather than predicted by the network.
 
 \subsection{Forward process}
 Define $y_t \in \mathbb{R}^{H \times W \times 3}$ as the RGB state at step $t$, with $y_0 = (r_0,g_0,b_0)$. Let $\varepsilon_t$ denote independent standard Gaussian noise over the flattened RGB coordinates, so $\operatorname{vec}(\varepsilon_t) \sim \mathcal{N}(0, I_{3HW})$. The forward process implemented in the repository is
@@ -183,14 +183,14 @@ Two separate neural networks are trained:
 f_{\theta_e} &: x_0 \mapsto z, \\
 f_{\theta_d} &: z \mapsto x_0.
 \end{align}
-In repository code and CLI flags these stages are still named `encoder' and `decoder' for backward compatibility, but in the paper we refer to $f_{\theta_e}$ as the \emph{Encrypter} and $f_{\theta_d}$ as the \emph{Decrypter}. Both are instantiated as the same compact U-Net-like CNN with \ModelParamCount\ trainable parameters, built from three downsampling blocks, a bottleneck, and three decoder blocks with skip connections following the U-Net design pattern \citep{ronneberger2015unet}.
+In repository code and CLI flags these stages are still named `encoder' and `decoder' for backward compatibility, but in the paper we refer to $f_{\theta_e}$ as the \emph{Encrypter} and $f_{\theta_d}$ as the \emph{Decrypter}. Both are instantiated as the same compact U-Net-like CNN with \ModelParamCount\ trainable parameters, built from three downsampling blocks, a bottleneck, and three decoder blocks with skip connections following the U-Net design pattern \citep{ronneberger2015unet}. The network predicts three separate $256$-way categorical distributions, one for each RGB channel, and the output alpha channel is copied from the input image.
 
-Training uses an $L_1$ objective:
+Training uses a per-channel categorical objective on RGB:
 \begin{align}
-\mathcal{L}_{\text{enc}}(\theta_e) &= \frac{1}{N}\sum_{i=1}^{N} \left\lVert f_{\theta_e}(x_0^{(i)}) - z^{(i)} \right\rVert_1, \\
-\mathcal{L}_{\text{dec}}(\theta_d) &= \frac{1}{N}\sum_{i=1}^{N} \left\lVert f_{\theta_d}(z^{(i)}) - x_0^{(i)} \right\rVert_1.
+\mathcal{L}_{\text{enc}}(\theta_e) &= \frac{1}{3N}\sum_{i=1}^{N} \sum_{c \in \{R,G,B\}} \operatorname{CE}\!\left(f_{\theta_e}^{(c)}(x_0^{(i)}), z_c^{(i)} \right), \\
+\mathcal{L}_{\text{dec}}(\theta_d) &= \frac{1}{3N}\sum_{i=1}^{N} \sum_{c \in \{R,G,B\}} \operatorname{CE}\!\left(f_{\theta_d}^{(c)}(z^{(i)}), x_{0,c}^{(i)} \right).
 \end{align}
-The repository reports dataset mean absolute error (MAE), which is the elementwise absolute error averaged over every pixel and channel.
+Here $\operatorname{CE}$ denotes cross-entropy over the $256$ discrete RGB values for one channel. The repository still reports dataset mean absolute error (MAE) after converting predicted RGB logits back to discrete $8$-bit values and composing them with the preserved alpha channel.
 
 \section{Mathematical Analysis}
 \subsection{Closed-form endpoint distribution}
@@ -253,8 +253,8 @@ The public experiment uses the repository's current configuration:
     \item Image resolution during training: $\ImageSize \times \ImageSize$ RGBA.
     \item Forward schedule: $\NumSteps$ steps, linear $\beta_t$ from \BetaStart\ to \BetaEnd.
     \item Architecture: U-Net-like CNN with \ModelParamCount\ trainable parameters.
-    \item Objective: elementwise $L_1$ loss.
-    \item Training logs used here: 100-epoch Encrypter and Decrypter runs from the repository's `models/paper\_eval` directory.
+    \item Objective: per-channel cross-entropy on discrete RGB values, with alpha preserved exactly.
+    \item Training logs used here: continued Encrypter and Decrypter runs up to 1000 epochs from the repository's `models/paper\_eval` directory.
 \end{itemize}
 
 These are training-set results, not holdout results. They are useful for understanding whether the endpoint maps can fit the current paired transformation, but they should not be interpreted as evidence of security or strong out-of-distribution generalization.
@@ -271,7 +271,7 @@ The encoded RGB endpoint is heavily saturated and nearly decorrelated from the s
 This validates the intended behavior of the stochastic transform: the visible endpoint is hard to interpret directly. It also explains why exact inversion is mathematically impossible in the current design.
 
 \subsection{Training behavior}
-Both endpoint networks train smoothly over the first 20 epochs, with monotone decreases in train $L_1$ and dataset MAE. Figure~\ref{fig:training-curves} shows that the Decrypter converges slightly better than the Encrypter on this dataset.
+Both endpoint networks reach useful error levels quickly, although the discrete-RGB objective is noisier than the earlier continuous-regression baseline. Figure~\ref{fig:training-curves} shows steady overall improvement together with the expected epoch-to-epoch oscillations from categorical training on a small dataset. Extending training beyond the initial short run helped materially. The Encrypter best MAE improved from about $0.00628$ at 60 epochs to $0.000080$ by 200 epochs and $0.0000669$ by 1000 epochs. The Decrypter improved even more meaningfully, from about $0.0282$ in the earlier short run to $0.0223$ by 200 epochs and $0.00395$ by 1000 epochs.
 
 \subsection{Quantitative endpoint accuracy}
 Table~\ref{tab:main-results} summarizes the main quantitative results. The direct baseline compares the original image to the encoded image without a learned model. Both learned models improve substantially over that baseline.
@@ -299,12 +299,12 @@ Table~\ref{tab:main-results} summarizes the main quantitative results. The direc
 \end{figure}
 
 \subsection{Qualitative behavior}
-Figure~\ref{fig:reconstruction-grid} illustrates the current visual behavior. The encrypted targets are visually noisy and semantically obscured. The Encrypter should therefore be judged by how closely it matches that distorted transit target, not by similarity to the original image. The learned Encrypter now tracks the distorted target closely, including much of its clipped color distribution. The Decrypter recovers recognizable geometry and smooth tonal structure, but color fidelity remains limited and the outputs are still visibly softer than the originals.
+Figure~\ref{fig:reconstruction-grid} illustrates the current visual behavior. The encrypted targets are visually noisy and semantically obscured. The Encrypter should therefore be judged by how closely it matches that distorted transit target, not by similarity to the original image. The learned Encrypter now tracks the distorted target closely, including much of its clipped color distribution. After the 1000-epoch continuation, the Decrypter also recovers much stronger color fidelity and edge structure than before, and the Mew example in the abstract is now a genuine high-quality reconstruction from the encrypted input rather than a weak toy output.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{reconstruction_grid.png}
-    \caption{Qualitative examples from the current repository checkpoints: \EncoderExampleA, \EncoderExampleB, \EncoderExampleC, and \EncoderExampleD. Left-to-right within each example, the Encrypter output is supposed to resemble the distorted encrypted target rather than the original image. The final column is the Decrypter reconstruction from that encrypted input. The new paper checkpoints recover geometry and some smooth shading reliably, although the reconstructions remain softer and less colorful than the originals.}
+    \caption{Qualitative examples from the current repository checkpoints: \EncoderExampleA, \EncoderExampleB, \EncoderExampleC, and \EncoderExampleD. Left-to-right within each example, the Encrypter output is supposed to resemble the distorted encrypted target rather than the original image. The final column is the Decrypter reconstruction from that encrypted input. After the longer 1000-epoch training continuation, the paper checkpoints recover geometry, shading, and much more of the original sprite color distribution, although they are still learned reconstructions rather than exact inverses.}
     \label{fig:reconstruction-grid}
 \end{figure}
 

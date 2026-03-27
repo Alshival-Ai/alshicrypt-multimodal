@@ -2,6 +2,8 @@
 
 This directory contains a LaTeX draft paper for the current stochastic image encoding experiments.
 
+The current checked-in paper checkpoints use discrete `8-bit` RGB prediction with preserved alpha passthrough.
+
 ## Contents
 
 - `main.tex`: manuscript source

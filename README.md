@@ -19,6 +19,8 @@ This repository demonstrates a machine-learning workflow for image transformatio
 3. Train a Decrypter model to invert it (`Encrypted -> Original`).
 4. Export pretrained forward/reverse checkpoints for downstream applications.
 
+In the current image implementation, RGB is modeled as discrete `8-bit` channel values and alpha is preserved exactly rather than learned.
+
 The Pokemon dataset is used as a controlled, reproducible image example.  
 The image pipeline is the current working modality in the repository. The broader research goal is multimodal: apply the same core transport, corruption, and learned inversion principles to other media types as they mature, with audio as the next planned target.
 
@@ -78,6 +80,22 @@ Learns: `Encrypted -> Original`
 python train_pokemon_model.py --stage decoder --original-root pokemon --encoded-root pokemon_distorted --epochs 500 --target-mae 0.0
 ```
 
+The current checkpoints use a discrete-RGB objective:
+
+- three independent `256`-way channel predictions for `R`, `G`, and `B`
+- preserved alpha copied through from the input image
+
+### 5) Restore Distorted Sprites with the Decrypter
+
+Runs the trained Decrypter across `pokemon_distorted/` and writes reconstructed
+sprites to `pokemon_restored/`.
+
+```powershell
+python restore_pokemon.py --input-dir pokemon_distorted --output-dir pokemon_restored --checkpoint models/paper_eval/decoder_best.pt
+```
+
+Use `--overwrite` to refresh existing restored outputs after retraining.
+
 ## Pretrained Model Outputs
 
 Training writes checkpoints to `models/`:
@@ -91,6 +109,9 @@ Training writes checkpoints to `models/`:
 
 Paper-ready pretrained checkpoints are also included under `models/paper_eval/` so others can test the current Encrypter/Decrypter pair directly without retraining first.
 
+The corresponding restored sample outputs can be regenerated locally into
+`pokemon_restored/` with `restore_pokemon.py`.
+
 ## Paper Alignment
 
 The GitHub repo and the research paper are intended to stay tightly aligned.
@@ -100,9 +121,10 @@ For the canonical paper-sync workflow and source-of-truth files, see `PAPER_SYNC
 
 - `pokemon_distort.py`: dataset distortion pipeline with progress bar and resume behavior
 - `prepare_training_pairs.py`: pair manifest generation
-- `train_pokemon_model.py`: GPU-first training loop for the forward (`encoder`/Encrypter) and reverse (`decoder`/Decrypter) models
-- `training/models.py`: U-Net-like CNN architecture
-- `training/pokemon_pairs.py`: pair matching + dataset loader
+- `train_pokemon_model.py`: GPU-first training loop for the forward (`encoder`/Encrypter) and reverse (`decoder`/Decrypter) models using discrete RGB classification
+- `restore_pokemon.py`: batch Decrypter inference that reconstructs `pokemon_distorted/` into `pokemon_restored/`
+- `training/models.py`: U-Net-like CNN with a discrete RGB logits head
+- `training/pokemon_pairs.py`: pair matching + dataset loader for float inputs, integer RGB targets, and preserved alpha
 
 ## Notes
 

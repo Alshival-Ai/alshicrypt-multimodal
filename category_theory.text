@@ -33,7 +33,7 @@ with intended relationships
 Interpretation
 --------------
 - V is a tensor space for a modality.
-- For images, x can be an RGBA tensor in [0,1]^(H x W x 4).
+- For images, x can be a tensor with RGB values in {0,...,255}^(H x W x 3) together with a preserved alpha mask.
 - For audio, x can be an audio tensor in an analogous tensor space.
 - T acts on the whole tensor object, not coordinate-by-coordinate through a separate grid object.
 - E is the learned forward model that approximates the tensor morphism T.

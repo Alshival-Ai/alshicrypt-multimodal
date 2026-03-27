@@ -21,14 +21,14 @@ MODEL_DIR = REPO_ROOT / "models" / "paper_eval"
 
 sys.path.insert(0, str(REPO_ROOT))
 
-from training.models import UNetLike
+from training.models import DiscreteRGBUNet, compose_rgba, rgb_logits_to_uint8, rgb_uint8_to_float
 from training.pokemon_pairs import PokemonPairDataset, build_pairs
 
 
 @dataclass(frozen=True)
 class CurvePoint:
     epoch: int
-    train_l1: float
+    train_error: float
     dataset_mae: float
 
 
@@ -38,7 +38,7 @@ def beta_schedule(steps: int, beta_start: float, beta_end: float) -> np.ndarray:
 
 def parse_log(path: Path) -> list[CurvePoint]:
     pattern = re.compile(
-        r"epoch=(?P<epoch>\d+)\s+train_l1=(?P<train>[0-9.]+)\s+dataset_mae=(?P<mae>[0-9.]+)"
+        r"epoch=(?P<epoch>\d+)\s+train_(?:l1|ce)=(?P<train>[0-9.]+)\s+dataset_mae=(?P<mae>[0-9.]+)"
     )
     raw = path.read_bytes()
     for encoding in ("utf-8", "utf-8-sig", "utf-16", "utf-16-le"):
@@ -57,7 +57,7 @@ def parse_log(path: Path) -> list[CurvePoint]:
         points.append(
             CurvePoint(
                 epoch=int(match.group("epoch")),
-                train_l1=float(match.group("train")),
+                train_error=float(match.group("train")),
                 dataset_mae=float(match.group("mae")),
             )
         )
@@ -76,29 +76,43 @@ def tensor_to_display_image(tensor: torch.Tensor) -> np.ndarray:
     return composite_rgba_to_rgb(array)
 
 
-def load_model(stage: str, image_size: int, device: torch.device) -> UNetLike:
-    checkpoint_path = MODEL_DIR / f"{stage}_best.pt"
-    checkpoint = torch.load(checkpoint_path, map_location=device)
-    model = UNetLike(in_channels=4, out_channels=4)
+def load_checkpoint(stage: str, device: torch.device) -> dict[str, object]:
+    return torch.load(MODEL_DIR / f"{stage}_best.pt", map_location=device, weights_only=False)
+
+
+def load_model(stage: str, device: torch.device) -> tuple[DiscreteRGBUNet, dict[str, object]]:
+    checkpoint = load_checkpoint(stage, device)
+    model = DiscreteRGBUNet(
+        in_channels=4,
+        base=int(checkpoint.get("base_channels", 64)),
+        rgb_bins=int(checkpoint.get("rgb_bins", 256)),
+    )
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device)
     model.eval()
-    return model
+    return model, checkpoint
 
 
-def make_loader(items, mode: str, image_size: int, batch_size: int = 16) -> DataLoader:
-    dataset = PokemonPairDataset(items, mode=mode, image_size=image_size)
+def make_loader(items, mode: str, image_size: int, resize_mode: str, batch_size: int = 16) -> DataLoader:
+    dataset = PokemonPairDataset(items, mode=mode, image_size=image_size, resize_mode=resize_mode)
     return DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+
+
+def predict_rgba(model: DiscreteRGBUNet, x: torch.Tensor) -> torch.Tensor:
+    logits = model(x)
+    rgb = rgb_uint8_to_float(rgb_logits_to_uint8(logits))
+    return compose_rgba(rgb, x[:, 3:])
 
 
 def evaluate_stage(
     stage: str,
-    model: UNetLike,
+    model: DiscreteRGBUNet,
     items,
     image_size: int,
+    resize_mode: str,
     device: torch.device,
 ) -> dict[str, float]:
-    loader = make_loader(items, stage, image_size=image_size)
+    loader = make_loader(items, stage, image_size=image_size, resize_mode=resize_mode)
 
     total_abs = 0.0
     total_abs_rgb = 0.0
@@ -114,13 +128,13 @@ def evaluate_stage(
     alpha_count = 0
 
     with torch.no_grad():
-        for x, y in loader:
+        for x, _y_rgb, _source_alpha, target in loader:
             x = x.to(device)
-            y = y.to(device)
-            pred = model(x)
+            target = target.to(device)
+            pred = predict_rgba(model, x)
 
-            diff = pred - y
-            base_diff = x - y
+            diff = pred - target
+            base_diff = x - target
 
             total_abs += diff.abs().sum().item()
             total_abs_rgb += diff[:, :3].abs().sum().item()
@@ -133,9 +147,9 @@ def evaluate_stage(
             baseline_mse += base_diff.square().sum().item()
             baseline_mse_rgb += base_diff[:, :3].square().sum().item()
 
-            total_count += y.numel()
-            rgb_count += y[:, :3].numel()
-            alpha_count += y[:, 3:].numel()
+            total_count += target.numel()
+            rgb_count += target[:, :3].numel()
+            alpha_count += target[:, 3:].numel()
 
     mae_all = total_abs / total_count
     mae_rgb = total_abs_rgb / rgb_count
@@ -238,9 +252,9 @@ def generate_training_curve_figure(encoder_curve: list[CurvePoint], decoder_curv
         (axes[1], decoder_curve, "Decoder training", "#7a1f1f"),
     ]:
         epochs = [point.epoch for point in curve]
-        train_l1 = [point.train_l1 for point in curve]
+        train_error = [point.train_error for point in curve]
         dataset_mae = [point.dataset_mae for point in curve]
-        ax.plot(epochs, train_l1, label="train L1", linewidth=2.0, color=color, alpha=0.75)
+        ax.plot(epochs, train_error, label="train objective", linewidth=2.0, color=color, alpha=0.75)
         ax.plot(epochs, dataset_mae, label="dataset MAE", linewidth=2.0, color="#111111")
         ax.set_title(title)
         ax.set_xlabel("Epoch")
@@ -255,18 +269,17 @@ def generate_training_curve_figure(encoder_curve: list[CurvePoint], decoder_curv
 
 def generate_reconstruction_figure(
     items,
-    encoder_model: UNetLike,
-    decoder_model: UNetLike,
+    encoder_model: DiscreteRGBUNet,
+    decoder_model: DiscreteRGBUNet,
     image_size: int,
+    resize_mode: str,
     device: torch.device,
 ) -> list[str]:
     preferred = ["bulbasaur", "charizard", "pikachu", "mewtwo"]
     items_by_name = {item.name: item for item in items}
     selected_names = [name for name in preferred if name in items_by_name]
     if len(selected_names) < 4:
-        selected_names.extend(
-            item.name for item in items if item.name not in selected_names
-        )
+        selected_names.extend(item.name for item in items if item.name not in selected_names)
     selected_names = selected_names[:4]
 
     fig, axes = plt.subplots(len(selected_names), 4, figsize=(10, 2.5 * len(selected_names)))
@@ -280,11 +293,11 @@ def generate_reconstruction_figure(
     with torch.no_grad():
         for row, name in enumerate(selected_names):
             item = items_by_name[name]
-            original = PokemonPairDataset([item], mode="encoder", image_size=image_size)[0][0].unsqueeze(0).to(device)
-            encoded = PokemonPairDataset([item], mode="encoder", image_size=image_size)[0][1].unsqueeze(0).to(device)
+            original = PokemonPairDataset([item], mode="encoder", image_size=image_size, resize_mode=resize_mode)[0][0].unsqueeze(0).to(device)
+            encoded = PokemonPairDataset([item], mode="decoder", image_size=image_size, resize_mode=resize_mode)[0][0].unsqueeze(0).to(device)
 
-            pred_encoded = encoder_model(original)
-            pred_decoded = decoder_model(encoded)
+            pred_encoded = predict_rgba(encoder_model, original)
+            pred_decoded = predict_rgba(decoder_model, encoded)
 
             row_images = [
                 tensor_to_display_image(original[0]),
@@ -304,29 +317,47 @@ def generate_reconstruction_figure(
     return selected_names
 
 
+def generate_mew_reconstruction_figure(
+    items,
+    decoder_model: DiscreteRGBUNet,
+    image_size: int,
+    resize_mode: str,
+    device: torch.device,
+) -> None:
+    items_by_name = {item.name: item for item in items}
+    if "mew" not in items_by_name:
+        raise RuntimeError("Expected mew in dataset.")
+    encoded = PokemonPairDataset([items_by_name["mew"]], mode="decoder", image_size=image_size, resize_mode=resize_mode)[0][0].unsqueeze(0).to(device)
+    with torch.no_grad():
+        pred = predict_rgba(decoder_model, encoded)
+    array = (pred[0].detach().cpu().permute(1, 2, 0).numpy() * 255.0).round().clip(0, 255).astype(np.uint8)
+    Image.fromarray(array, mode="RGBA").save(FIGURE_DIR / "mew_decrypter_reconstruction.png")
+
+
 def generate_pixel_statistics_figure(
     items,
     image_size: int,
+    resize_mode: str,
     encoder_metrics: dict[str, float],
     decoder_metrics: dict[str, float],
 ) -> None:
-    loader = make_loader(items, mode="encoder", image_size=image_size)
-    hist_original = np.zeros(32, dtype=np.int64)
-    hist_encoded = np.zeros(32, dtype=np.int64)
+    loader = make_loader(items, mode="encoder", image_size=image_size, resize_mode=resize_mode)
+    hist_original = np.zeros(256, dtype=np.int64)
+    hist_encoded = np.zeros(256, dtype=np.int64)
 
-    for original, encoded in loader:
-        original_rgb = original[:, :3].numpy().reshape(-1)
-        encoded_rgb = encoded[:, :3].numpy().reshape(-1)
-        hist_original += np.histogram(original_rgb, bins=32, range=(0.0, 1.0))[0]
-        hist_encoded += np.histogram(encoded_rgb, bins=32, range=(0.0, 1.0))[0]
+    for original, _encoded_rgb_target, _source_alpha, encoded_target in loader:
+        original_rgb = (original[:, :3].numpy() * 255.0).round().astype(np.uint8).reshape(-1)
+        encoded_rgb = (encoded_target[:, :3].numpy() * 255.0).round().astype(np.uint8).reshape(-1)
+        hist_original += np.bincount(original_rgb, minlength=256)
+        hist_encoded += np.bincount(encoded_rgb, minlength=256)
 
-    centers = np.linspace(0.0, 1.0, 32, endpoint=False) + 1.0 / 64.0
+    centers = np.arange(256)
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 3.8))
     axes[0].plot(centers, hist_original / hist_original.sum(), label="Original RGB", linewidth=2.0, color="#1d4e89")
     axes[0].plot(centers, hist_encoded / hist_encoded.sum(), label="Encoded RGB", linewidth=2.0, color="#a23b72")
-    axes[0].set_title("Pixel intensity distribution")
-    axes[0].set_xlabel("Normalized intensity")
+    axes[0].set_title("Discrete RGB value distribution")
+    axes[0].set_xlabel("8-bit RGB value")
     axes[0].set_ylabel("Density")
     axes[0].grid(alpha=0.25)
     axes[0].legend(frameon=False)
@@ -398,7 +429,6 @@ def main() -> None:
     torch.manual_seed(17)
     np.random.seed(17)
 
-    image_size = 128
     beta_start = 5e-4
     beta_end = 1e-1
     num_steps = 1000
@@ -414,11 +444,14 @@ def main() -> None:
 
     encoder_curve = parse_log(MODEL_DIR / "encoder.log")
     decoder_curve = parse_log(MODEL_DIR / "decoder.log")
-    encoder_model = load_model("encoder", image_size=image_size, device=device)
-    decoder_model = load_model("decoder", image_size=image_size, device=device)
+    encoder_model, encoder_checkpoint = load_model("encoder", device=device)
+    decoder_model, decoder_checkpoint = load_model("decoder", device=device)
 
-    encoder_metrics = evaluate_stage("encoder", encoder_model, items, image_size=image_size, device=device)
-    decoder_metrics = evaluate_stage("decoder", decoder_model, items, image_size=image_size, device=device)
+    image_size = int(encoder_checkpoint.get("image_size", 120))
+    resize_mode = str(encoder_checkpoint.get("resize_mode", "nearest"))
+
+    encoder_metrics = evaluate_stage("encoder", encoder_model, items, image_size=image_size, resize_mode=resize_mode, device=device)
+    decoder_metrics = evaluate_stage("decoder", decoder_model, items, image_size=image_size, resize_mode=resize_mode, device=device)
     dataset_stats = collect_dataset_stats(items)
 
     generate_forward_process_figure(betas, alpha)
@@ -428,11 +461,20 @@ def main() -> None:
         encoder_model,
         decoder_model,
         image_size=image_size,
+        resize_mode=resize_mode,
+        device=device,
+    )
+    generate_mew_reconstruction_figure(
+        items,
+        decoder_model,
+        image_size=image_size,
+        resize_mode=resize_mode,
         device=device,
     )
     generate_pixel_statistics_figure(
         items,
         image_size=image_size,
+        resize_mode=resize_mode,
         encoder_metrics=encoder_metrics,
         decoder_metrics=decoder_metrics,
     )
