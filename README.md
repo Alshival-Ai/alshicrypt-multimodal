@@ -89,6 +89,8 @@ Training writes checkpoints to `models/`:
 - `decoder_best.ts` (TorchScript for app integration)
 - `decoder_last.pt`
 
+Paper-ready pretrained checkpoints are also included under `models/paper_eval/` so others can test the current Encrypter/Decrypter pair directly without retraining first.
+
 ## Core Scripts
 
 - `pokemon_distort.py`: dataset distortion pipeline with progress bar and resume behavior
