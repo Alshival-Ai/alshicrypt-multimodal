@@ -7,52 +7,56 @@
 \@writefile{toc}{\contentsline {paragraph}{Contributions.}{2}{section*.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {2}Background and Motivation}{3}{section.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Images as functions and the endomorphism viewpoint}{3}{subsection.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Why stochastic corruption is attractive}{3}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Tensor algebra as the broader category-theoretic framing}{3}{subsection.2.2}\protected@file@percent }
 \citation{song2023consistency}
 \citation{song2023consistency}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Relation to consistency models}{4}{subsection.2.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}Method}{4}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Data domain}{4}{subsection.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Forward process}{4}{subsection.3.2}\protected@file@percent }
-\newlabel{eq:forward}{{8}{4}{Forward process}{equation.8}{}}
-\newlabel{eq:stored}{{9}{4}{Forward process}{equation.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Why stochastic corruption is attractive}{4}{subsection.2.3}\protected@file@percent }
 \citation{ronneberger2015unet}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Relation to consistency models}{5}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Method}{5}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Data domain}{5}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Forward process}{5}{subsection.3.2}\protected@file@percent }
+\newlabel{eq:forward}{{12}{5}{Forward process}{equation.12}{}}
+\newlabel{eq:stored}{{13}{5}{Forward process}{equation.13}{}}
 \@writefile{toc}{\contentsline {paragraph}{Implementation note.}{5}{section*.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Learned endpoint maps}{5}{subsection.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Mathematical Analysis}{5}{section.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Closed-form endpoint distribution}{5}{subsection.4.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The default corruption schedule used in the repository. Left: the linear $\beta _t$ schedule. Right: the log attenuation coefficient $\log _{10}\alpha _t$. By the final step, the RGB signal contribution is effectively annihilated.}}{6}{figure.1}\protected@file@percent }
-\newlabel{fig:forward-process}{{1}{6}{The default corruption schedule used in the repository. Left: the linear $\beta _t$ schedule. Right: the log attenuation coefficient $\log _{10}\alpha _t$. By the final step, the RGB signal contribution is effectively annihilated}{figure.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Mathematical Analysis}{6}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Closed-form endpoint distribution}{6}{subsection.4.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Why the chosen schedule is so destructive}{6}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Implications for invertibility}{6}{subsection.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Role of alpha preservation}{6}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Implications for invertibility}{7}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Role of alpha preservation}{7}{subsection.4.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {5}Experimental Setup}{7}{section.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {6}Results}{7}{section.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Forward-process statistics}{7}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Training behavior}{7}{subsection.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Quantitative endpoint accuracy}{7}{subsection.6.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Training dynamics for the Encrypter and Decrypter endpoint networks. Both optimize stably, supporting the claim that the stochastic pairing setup is learnable even with a relatively small convolutional model.}}{8}{figure.2}\protected@file@percent }
-\newlabel{fig:training-curves}{{2}{8}{Training dynamics for the Encrypter and Decrypter endpoint networks. Both optimize stably, supporting the claim that the stochastic pairing setup is learnable even with a relatively small convolutional model}{figure.2}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Dataset-level endpoint metrics on the current paired dataset. All-channel MAE is lower than RGB-only MAE because alpha is preserved exactly by the forward generator.}}{8}{table.1}\protected@file@percent }
 \newlabel{tab:main-results}{{1}{8}{Dataset-level endpoint metrics on the current paired dataset. All-channel MAE is lower than RGB-only MAE because alpha is preserved exactly by the forward generator}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Training behavior}{8}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Quantitative endpoint accuracy}{8}{subsection.6.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Qualitative behavior}{8}{subsection.6.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Discussion}{8}{section.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}What succeeded}{8}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Discussion}{9}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}What succeeded}{9}{subsection.7.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.2}What failed, or remains unresolved}{9}{subsection.7.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The process is not reversible.}{9}{section*.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The current implementation leaks alpha.}{9}{section*.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The public prototype fixes a single realized corruption path.}{9}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The current implementation is limited to a discrete color lattice.}{9}{section*.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Why the stochastic choice was still the right research move}{9}{subsection.7.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8}Future Work}{9}{section.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {9}Conclusion}{9}{section.9}\protected@file@percent }
 \bibstyle{plainnat}
 \bibdata{references}
 \bibcite{ho2020ddpm}{{1}{2020}{{Ho et~al.}}{{Ho, Jain, and Abbeel}}}
 \bibcite{ronneberger2015unet}{{2}{2015}{{Ronneberger et~al.}}{{Ronneberger, Fischer, and Brox}}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Future Work}{10}{section.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Conclusion}{10}{section.9}\protected@file@percent }
 \bibcite{song2021sde}{{3}{2021}{{Song et~al.}}{{Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole}}}
 \bibcite{song2023consistency}{{4}{2023}{{Song et~al.}}{{Song, Dhariwal, Chen, and Sutskever}}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Qualitative examples from the current repository checkpoints: bulbasaur, charizard, pikachu, and mewtwo. Left-to-right within each example, the Encrypter output is supposed to resemble the distorted encrypted target rather than the original image. The Decrypter recovers recognizable geometry, but color fidelity remains limited, which is consistent with the severe endpoint information loss predicted by the theory.}}{11}{figure.3}\protected@file@percent }
-\newlabel{fig:reconstruction-grid}{{3}{11}{Qualitative examples from the current repository checkpoints: \EncoderExampleA , \EncoderExampleB , \EncoderExampleC , and \EncoderExampleD . Left-to-right within each example, the Encrypter output is supposed to resemble the distorted encrypted target rather than the original image. The Decrypter recovers recognizable geometry, but color fidelity remains limited, which is consistent with the severe endpoint information loss predicted by the theory}{figure.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Left: original and encrypted RGB intensity distributions. Right: error reduction relative to the direct baseline. The current Decrypter improves over the baseline, but the improvement is incremental rather than evidence of full reversibility.}}{12}{figure.4}\protected@file@percent }
-\newlabel{fig:pixel-statistics}{{4}{12}{Left: original and encrypted RGB intensity distributions. Right: error reduction relative to the direct baseline. The current Decrypter improves over the baseline, but the improvement is incremental rather than evidence of full reversibility}{figure.4}{}}
-\gdef \@abspage@last{12}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Tensor-algebra view of the encryption algorithm. A modality sample is treated as a tensor $x \in V$, the intended encryption transform is a tensor morphism $T : V \to V$, and the learned Encrypter $E$ and Decrypter $D$ are trained to approximate the forward and reverse tensor maps. The current repository instantiates this picture for image tensors; image and audio cases are especially useful for intuition, but the abstraction is meant to generalize to text and other tensor-representable modalities as well.}}{12}{figure.1}\protected@file@percent }
+\newlabel{fig:tensor-algebra-view}{{1}{12}{Tensor-algebra view of the encryption algorithm. A modality sample is treated as a tensor $x \in V$, the intended encryption transform is a tensor morphism $T : V \to V$, and the learned Encrypter $E$ and Decrypter $D$ are trained to approximate the forward and reverse tensor maps. The current repository instantiates this picture for image tensors; image and audio cases are especially useful for intuition, but the abstraction is meant to generalize to text and other tensor-representable modalities as well}{figure.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The default corruption schedule used in the repository. Left: the linear $\beta _t$ schedule. Right: the log attenuation coefficient $\log _{10}\alpha _t$. By the final step, the RGB signal contribution is effectively annihilated.}}{13}{figure.2}\protected@file@percent }
+\newlabel{fig:forward-process}{{2}{13}{The default corruption schedule used in the repository. Left: the linear $\beta _t$ schedule. Right: the log attenuation coefficient $\log _{10}\alpha _t$. By the final step, the RGB signal contribution is effectively annihilated}{figure.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Training dynamics for the Encrypter and Decrypter endpoint networks. Both optimize stably, supporting the claim that the stochastic pairing setup is learnable even with a relatively small convolutional model.}}{13}{figure.3}\protected@file@percent }
+\newlabel{fig:training-curves}{{3}{13}{Training dynamics for the Encrypter and Decrypter endpoint networks. Both optimize stably, supporting the claim that the stochastic pairing setup is learnable even with a relatively small convolutional model}{figure.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Qualitative examples from the current repository checkpoints: bulbasaur, charizard, pikachu, and mewtwo. Left-to-right within each example, the Encrypter output is supposed to resemble the distorted encrypted target rather than the original image. The final column is the Decrypter reconstruction from that encrypted input. After the longer 1000-epoch training continuation, the paper checkpoints recover geometry, shading, and much more of the original sprite color distribution, although they are still learned reconstructions rather than exact inverses.}}{14}{figure.4}\protected@file@percent }
+\newlabel{fig:reconstruction-grid}{{4}{14}{Qualitative examples from the current repository checkpoints: \EncoderExampleA , \EncoderExampleB , \EncoderExampleC , and \EncoderExampleD . Left-to-right within each example, the Encrypter output is supposed to resemble the distorted encrypted target rather than the original image. The final column is the Decrypter reconstruction from that encrypted input. After the longer 1000-epoch training continuation, the paper checkpoints recover geometry, shading, and much more of the original sprite color distribution, although they are still learned reconstructions rather than exact inverses}{figure.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Left: original and encrypted RGB intensity distributions. Right: error reduction relative to the direct baseline. The current Decrypter improves over the baseline substantially, but the result is still learned reconstruction rather than evidence of full reversibility.}}{15}{figure.5}\protected@file@percent }
+\newlabel{fig:pixel-statistics}{{5}{15}{Left: original and encrypted RGB intensity distributions. Right: error reduction relative to the direct baseline. The current Decrypter improves over the baseline substantially, but the result is still learned reconstruction rather than evidence of full reversibility}{figure.5}{}}
+\gdef \@abspage@last{15}
