@@ -8,6 +8,12 @@
 
 <p align="center">Built by <strong>The Data Team</strong> at <a href="https://alshival.ai">Alshival.Ai</a>.</p>
 
+<p align="center">
+  <a href="paper/main.pdf">
+    <img alt="Read the Paper" src="https://img.shields.io/badge/Read%20the%20Paper-PDF-0A66C2?style=for-the-badge" />
+  </a>
+</p>
+
 Research prototype for multimodal learned encryption/decryption using a shared stochastic distortion process.
 
 ## Project Purpose
@@ -116,6 +122,7 @@ The corresponding restored sample outputs can be regenerated locally into
 ## Paper Alignment
 
 The GitHub repo and the research paper are intended to stay tightly aligned.
+The current manuscript source is `paper/main.tex`, and the compiled paper is linked near the top of this README for quick reference.
 For the canonical paper-sync workflow and source-of-truth files, see `PAPER_SYNC.md`.
 
 ## Core Scripts
