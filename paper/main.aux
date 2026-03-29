@@ -11,8 +11,8 @@
 \citation{song2023consistency}
 \citation{song2023consistency}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Why stochastic corruption is attractive}{4}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Relation to consistency models}{4}{subsection.2.4}\protected@file@percent }
 \citation{ronneberger2015unet}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Relation to consistency models}{5}{subsection.2.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3}Method}{5}{section.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Data domain}{5}{subsection.3.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Forward process}{5}{subsection.3.2}\protected@file@percent }
@@ -33,20 +33,20 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Training behavior}{8}{subsection.6.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Quantitative endpoint accuracy}{8}{subsection.6.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Qualitative behavior}{8}{subsection.6.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Discussion}{9}{section.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}What succeeded}{9}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Discussion}{8}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}What succeeded}{8}{subsection.7.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.2}What failed, or remains unresolved}{9}{subsection.7.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The process is not reversible.}{9}{section*.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The current implementation leaks alpha.}{9}{section*.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The public prototype fixes a single realized corruption path.}{9}{section*.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The current implementation is limited to a discrete color lattice.}{9}{section*.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Why the stochastic choice was still the right research move}{9}{subsection.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Future Work}{9}{section.8}\protected@file@percent }
 \bibstyle{plainnat}
 \bibdata{references}
 \bibcite{ho2020ddpm}{{1}{2020}{{Ho et~al.}}{{Ho, Jain, and Abbeel}}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Future Work}{10}{section.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {9}Conclusion}{10}{section.9}\protected@file@percent }
 \bibcite{ronneberger2015unet}{{2}{2015}{{Ronneberger et~al.}}{{Ronneberger, Fischer, and Brox}}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Conclusion}{10}{section.9}\protected@file@percent }
 \bibcite{song2021sde}{{3}{2021}{{Song et~al.}}{{Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole}}}
 \bibcite{song2023consistency}{{4}{2023}{{Song et~al.}}{{Song, Dhariwal, Chen, and Sutskever}}}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Tensor-algebra view of the encryption algorithm. A modality sample is treated as a tensor $x \in V$, the intended encryption transform is a tensor morphism $T : V \to V$, and the learned Encrypter $E$ and Decrypter $D$ are trained to approximate the forward and reverse tensor maps. The current repository instantiates this picture for image tensors; image and audio cases are especially useful for intuition, but the abstraction is meant to generalize to text and other tensor-representable modalities as well.}}{12}{figure.1}\protected@file@percent }
