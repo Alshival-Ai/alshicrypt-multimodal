@@ -20,6 +20,7 @@ This repository demonstrates a machine-learning workflow for image transformatio
 4. Export pretrained forward/reverse checkpoints for downstream applications.
 
 In the current image implementation, RGB is modeled as discrete `8-bit` channel values and alpha is preserved exactly rather than learned.
+That matches the current PNG-based dataset well, but it is also a present limitation. Moving to truly continuous color scales will likely require a different output parameterization and more varied training data than the current sprite corpus provides.
 
 The Pokemon dataset is used as a controlled, reproducible image example.  
 The image pipeline is the current working modality in the repository. The broader research goal is multimodal: apply the same core transport, corruption, and learned inversion principles to other media types as they mature, with audio as the next planned target.

@@ -335,6 +335,9 @@ Preserving alpha means one quarter of the channels are already solved. This lowe
 \paragraph{The public prototype fixes a single realized corruption path.}
 That choice is appropriate for reproducible training pairs, but it is not a secure keyed scheme. A production-grade system would need secret per-message randomness or a keyed pseudorandom generator driving the corruption schedule.
 
+\paragraph{The current implementation is limited to a discrete color lattice.}
+The present image pipeline models RGB on the $8$-bit lattice $\{0,\dots,255\}^3$ and learns three categorical channel distributions rather than a truly continuous color field. That choice matches the stored PNG endpoint and works well for the current sprite dataset, but it is still a limitation of the present system. Extending the framework to continuous color scales would likely require a different output parameterization, such as continuous regression with stronger calibration, mixture-density style heads, discretizations at much finer resolution, or latent continuous color models. It would also likely require substantially more and more varied training data than the current Pokemon sprite corpus, because continuous color recovery is a richer estimation problem than recovering values on a fixed 8-bit lattice.
+
 \subsection{Why the stochastic choice was still the right research move}
 Despite those limitations, the stochastic choice was justified. It gave us an analyzable corruption operator, a well-conditioned training target, and a direct way to study the gap between \emph{learned reconstruction under noise} and \emph{cryptographic reversibility}. Deterministic non-linear tensor morphisms did not provide that level of control or transparency in our exploratory work.
 
@@ -348,6 +351,7 @@ Several directions follow naturally from the present findings:
     \item Study invertible or volume-preserving transforms when exact recoverability is required.
     \item Add holdout and cross-domain evaluations to distinguish memorization, generalization, and true prior-based reconstruction.
     \item Explore multi-time training objectives inspired more directly by consistency models instead of only endpoint supervision.
+    \item Investigate continuous-color extensions beyond the current discrete RGB lattice, likely with richer output heads and larger, more diverse training datasets.
 \end{enumerate}
 
 \section{Conclusion}
